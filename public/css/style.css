@@ -1,0 +1,204 @@
+:root {
+    --primary-blue: #007bff;
+    --dark-blue: #0056b3;
+    --black: #1a1a1a;
+    --white: #ffffff;
+    --light-gray: #f4f4f4;
+    --text-gray: #666;
+    --header-height: 120px;
+    --transition: all 0.3s ease;
+}
+
+body {
+    padding-top: var(--header-height); /* Чтобы контент не заезжал под шапку */
+}
+
+.container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header Styles */
+.main-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: var(--white);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.header-top {
+    background: var(--black);
+    color: var(--white);
+    padding: 8px 0;
+    font-size: 0.9rem;
+}
+
+.header-top .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-contacts {
+    display: flex;
+    gap: 20px;
+}
+
+.header-contacts a {
+    color: var(--white);
+    text-decoration: none;
+}
+
+.header-bottom {
+    padding: 15px 0;
+}
+
+.header-bottom .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo img {
+    height: 50px;
+}
+
+.nav-menu {
+    display: flex;
+    gap: 25px;
+}
+
+.nav-menu a {
+    text-decoration: none;
+    color: var(--black);
+    font-weight: 500;
+    transition: var(--transition);
+}
+
+.nav-menu a:hover {
+    color: var(--primary-blue);
+}
+
+.header-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    border: none;
+}
+
+.btn-outline {
+    border: 2px solid var(--primary-blue);
+    color: var(--primary-blue);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+.btn-blue {
+    background: var(--primary-blue);
+    color: var(--white);
+}
+
+.btn-blue:hover {
+    background: var(--dark-blue);
+}
+
+/* Footer Styles */
+.main-footer {
+    background: var(--black);
+    color: var(--white);
+    padding: 60px 0 30px;
+    margin-top: 50px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 40px;
+}
+
+.footer-info p {
+    color: var(--text-gray);
+    margin-top: 10px;
+}
+
+.footer-contacts h4 {
+    margin-bottom: 20px;
+    color: var(--primary-blue);
+}
+
+.footer-contacts p {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.footer-bottom {
+    text-align: center;
+    padding-top: 20px;
+    font-size: 0.8rem;
+    color: var(--text-gray);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+.test-card {
+    background: var(--white);
+    border-left: 5px solid var(--primary-blue);
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    max-width: 600px;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.card-header h3 {
+    color: var(--black);
+    font-size: 1.4rem;
+}
+
+.card-body p {
+    color: var(--text-gray);
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+.card-footer {
+    margin-top: 20px;
+    color: var(--secondary-color);
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
