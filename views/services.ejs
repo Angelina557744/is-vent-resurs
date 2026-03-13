@@ -58,16 +58,29 @@
         
         <div class="services-grid">
             <% services.forEach(service => { %>
-                <div class="service-card animate__animated animate__fadeInUp">
-                    <div>
-                        <i data-lucide="<%= service.image_url.replace('.png', '') %>" size="48"></i>
-                        <h3><%= service.title %></h3>
-                        <p><%= service.description %></p>
-                    </div>
-                    <a href="/services/<%= service.id %>" class="service-link">
-                        Подробнее <i data-lucide="arrow-right" size="16"></i>
-                    </a>
+                <div class="service-card reveal-card">
+                  <div>
+                    <div class="service-image-container" style="width: 100%; height: 200px; overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
+                     <% if (service.image_url && service.image_url !== '') { %>
+                         <img src="/img/<%= service.image_url %>" 
+                              alt="<%= service.title %>" 
+                              loading="lazy" 
+                              style="width: 100%; height: 100%; object-fit: cover;">
+                          <% } else { %>
+                            <div style="width: 100%; height: 100%; background: var(--light-gray); display: flex; align-items: center; justify-content: center;">
+                          <i data-lucide="image" size="48" style="color: #ccc;"></i>
                 </div>
+            <% } %>
+        </div>
+
+        <h3><%= service.title %></h3>
+        <p style="font-size: 0.9rem; color: var(--text-gray);"><%= service.description %></p>
+    </div>
+    
+    <a href="/services/<%= service.id %>" class="service-link">
+        Подробнее <i data-lucide="arrow-right" size="16"></i>
+    </a>
+</div>
             <% }) %>
         </div>
     </div>

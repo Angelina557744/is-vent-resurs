@@ -21,8 +21,28 @@
             </div>
         </div>
     </footer>
-    <script>
-        lucide.createIcons();
-    </script>
+
+                    
+<script>
+    lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', function() {
+        const observerOptions = {
+            threshold: 0.1 // Сработает, когда 10% карточки будет видно
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target); // Перестаем следить после активации
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-card').forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>
 </body>
 </html>

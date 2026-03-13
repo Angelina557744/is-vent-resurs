@@ -9,8 +9,53 @@
     --transition: all 0.3s ease;
 }
 
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCodePL-Regular.otf') format('opentype');
+    font-weight: 400; /* normal */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCodePLItalic-LightItalic.otf') format('opentype');
+    font-weight: 300; /* light */
+    font-style: italic;
+}
+
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCodePL-Light.otf') format('opentype');
+    font-weight: 300; /* light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCodePL-ExtraLight.otf') format('opentype');
+    font-weight: 200; /* extra-light */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCode-Bold.otf') format('opentype');
+    font-weight: 700; /* bold */
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'CascadiaCode';
+    src: url('/public/fonts/CascadiaCodePL-SemiBold.otf') format('opentype');
+    font-weight: 600; /* semi-bold */
+    font-style: normal;
+}
+
 body {
     padding-top: var(--header-height); /* Чтобы контент не заезжал под шапку */
+
+    font-family: 'CascadiaCode', monospace; /* monospace на случай если шрифт не загрузится */
+
 }
 
 .container {
@@ -166,7 +211,24 @@ body {
 
 
 
+.info-content span {
+    display: block; /* чтобы применились отступы */
+    font-size: 1.4rem; /* увеличиваем размер */
+    font-weight: 700; /* делаем жирным (Bold) */
+    color: var(--primary-blue);
+    text-transform: uppercase;
+    letter-spacing: 2px; /* раздвигаем буквы для стиля */
+    margin-bottom: 5px;
+}
 
+/* Заголовок "Комплексный подход к инженерным решениям" */
+.info-content h2 {
+    font-size: 2.2rem; /* немного уменьшаем, чтобы был баланс */
+    font-weight: 300; /* используем Light (300) или Regular (400) */
+    line-height: 1.2;
+    margin-bottom: 30px;
+    color: var(--black);
+}
 
 
 .test-card {
@@ -268,9 +330,40 @@ body {
 
 .benefit-item {
     display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    margin-top: 25px;
+    align-items: center; /* Выравниваем иконку по центру текста */
+    gap: 25px;           /* Увеличиваем расстояние между иконкой и текстом */
+    margin-top: 35px;    /* Больше отступа между самими блоками */
+    padding: 15px;
+    transition: var(--transition);
+    border-radius: 10px;
+}
+
+/* Эффект при наведении на блок преимущества */
+.benefit-item:hover {
+    background: rgba(0, 123, 255, 0.05);
+    transform: translateX(10px);
+}
+
+/* Стили для самих иконок Lucide */
+.benefit-item svg {
+    min-width: 60px;     /* Фиксируем ширину, чтобы текст не прыгал */
+    height: 60px;
+    color: var(--primary-blue);
+    stroke-width: 1.5px; /* Делаем линии иконки чуть тоньше и изящнее */
+    filter: drop-shadow(0 4px 6px rgba(0, 123, 255, 0.2));
+}
+
+.benefit-item h4 {
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+    font-weight: 600;    /* SemiBold из Cascadia Code */
+}
+
+.benefit-item p {
+    font-weight: 300;    /* Light из Cascadia Code */
+    font-size: 0.95rem;
+    color: var(--text-gray);
+    line-height: 1.4;
 }
 
 .sidebar-form {
@@ -327,3 +420,68 @@ body {
 }
 
 .service-link:hover { text-decoration: underline; }
+
+
+.service-image-container img {
+    transition: transform 0.5s ease;
+}
+
+.service-card:hover .service-image-container img {
+    transform: scale(1.1); /* Легкое увеличение фото при наведении на карточку */
+}
+
+
+.services-hero {
+    /* Высота блока — 70% от высоты экрана */
+    height: 70vh; 
+    min-height: 500px;
+    
+    /* Сначала указываем градиент, затем путь к фото */
+    background-image: 
+        linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 40, 80, 0.7)), 
+        url('/img/main-bg.jpg');
+    
+    /* Настройки фона: фото не повторяется, всегда по центру и заполняет весь блок */
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed; /* Эффект параллакса при скролле (опционально) */
+    
+    /* Центрируем текст внутри блока */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    text-align: center;
+}
+
+/* Настройка шрифтов Cascadia для заголовка */
+.services-hero h1 {
+    font-family: 'Cascadia Code', monospace;
+    font-weight: 700;
+    font-size: 4rem;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 10px rgba(0,0,0,0.5); /* Тень для четкости текста */
+}
+
+.services-hero p {
+    font-family: 'Cascadia Code', monospace;
+    font-weight: 300; /* ExtraLight или Light */
+    font-size: 1.2rem;
+    max-width: 800px;
+    margin: 0 auto 30px;
+}
+
+/* Начальное состояние карточки перед появлением */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.8s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+/* Состояние после активации (когда доскроллили) */
+.reveal-on-scroll.active {
+    opacity: 1;
+    transform: translateY(0);
+}
