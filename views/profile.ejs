@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+
+<main class="container" style="margin-top: 50px;">
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <h1>Личный кабинет</h1>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+        
+        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 20px;">
+            <div style="background: var(--light-gray); padding: 20px; border-radius: 8px; text-align: center;">
+                <i data-lucide="user-circle" size="64" style="color: var(--primary-blue);"></i>
+                <h3 style="margin-top: 10px;"><%= user.full_name %></h3>
+                <span style="display: inline-block; background: var(--primary-blue); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; margin-top: 5px;">
+                    <%= user.role === 'admin' ? 'Администратор' : 'Клиент' %>
+                </span>
+            </div>
+            
+            <div>
+                <h3>Мои проекты</h3>
+                <p style="color: var(--text-gray); margin-top: 10px;">У вас пока нет активных проектов.</p>
+                </div>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %>

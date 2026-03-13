@@ -1,0 +1,76 @@
+<%- include('partials/header') %>
+
+<section class="services-hero">
+    <div class="container">
+        <h1 class="animate__animated animate__fadeInDown" style="font-size: 3.5rem; letter-spacing: 2px;">УСЛУГИ ПОД КЛЮЧ</h1>
+        <p class="animate__animated animate__fadeInUp" style="max-width: 800px; margin: 20px auto; font-size: 1.2rem;">
+            Проектирование, поставка оборудования и монтаж инженерных систем для промышленных и коммерческих объектов по всей России и Казахстану.
+        </p>
+        <a href="#catalog" class="btn btn-blue animate__animated animate__zoomIn">Заказать проект</a>
+    </div>
+</section>
+
+<section class="container info-section">
+    <div class="info-content">
+        <span style="color: var(--primary-blue); font-weight: bold; text-transform: uppercase;">Почему «ВентРесурс»?</span>
+        <h2 style="font-size: 2.5rem; margin-top: 10px;">Комплексный подход к инженерным решениям</h2>
+        
+        <div class="benefit-item">
+            <i data-lucide="wrench" size="40"></i>
+            <div>
+                <h4>Инжиниринг</h4>
+                <p>Более 300 проектов «под ключ». Собственный проектный отдел.</p>
+            </div>
+        </div>
+        <div class="benefit-item">
+            <i data-lucide="truck" size="40"></i>
+            <div>
+                <h4>Техника</h4>
+                <p>Собственная техника и склады. Материалы всегда в наличии.</p>
+            </div>
+        </div>
+        <div class="benefit-item">
+            <i data-lucide="map" size="40"></i>
+            <div>
+                <h4>География</h4>
+                <p>Работаем по всей РФ и Республике Казахстан. Выезд специалиста — бесплатно.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-sidebar">
+        <div class="sidebar-form">
+            <h3>Нужна помощь?</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 20px;">Оставьте заявку, инженер проконсультирует вас бесплатно.</p>
+            <form action="/callback" method="POST">
+                <input type="text" name="name" placeholder="Ваше имя" required style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
+                <input type="tel" name="phone" placeholder="Телефон" required style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:5px;">
+                <button type="submit" class="btn btn-blue" style="width: 100%;">Позвоните мне</button>
+            </form>
+            <p style="font-size: 0.8rem; margin-top: 15px; color: var(--text-gray);">* Не любите формы? Звоните: +7 (3532) 43-99-99</p>
+        </div>
+    </div>
+</section>
+
+<section id="catalog" style="background: var(--light-gray); padding: 80px 0;">
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 50px;">НАПРАВЛЕНИЯ ДЕЯТЕЛЬНОСТИ</h2>
+        
+        <div class="services-grid">
+            <% services.forEach(service => { %>
+                <div class="service-card animate__animated animate__fadeInUp">
+                    <div>
+                        <i data-lucide="<%= service.image_url.replace('.png', '') %>" size="48"></i>
+                        <h3><%= service.title %></h3>
+                        <p><%= service.description %></p>
+                    </div>
+                    <a href="/services/<%= service.id %>" class="service-link">
+                        Подробнее <i data-lucide="arrow-right" size="16"></i>
+                    </a>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -17,18 +17,29 @@
                     <a href="tel:88002013784"><i data-lucide="phone" size="16"></i> 8 (800) 201-37-84</a>
                 </div>
                 <div class="header-auth">
-                    <a href="/login" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px;">
-                        <i data-lucide="user" size="18"></i> Войти / Личный кабинет
-                    </a>
-                </div>
+    <% if (user) { %>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <a href="/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
+                <i data-lucide="user" size="16"></i> <%= user.full_name %>
+            </a>
+            <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-size: 0.9rem;">
+                <i data-lucide="log-out" size="16"></i> Выйти
+            </a>
+        </div>
+    <% } else { %>
+        <a href="/login" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px;">
+            <i data-lucide="user" size="18"></i> Войти / Личный кабинет
+        </a>
+    <% } %>
+</div>
             </div>
         </div>
 
         <div class="header-bottom">
             <div class="container">
                 <div class="logo">
-                    <a href="/" style="font-weight: bold; font-size: 24px; text-decoration: none; color: var(--black);">
-                        Вент<span style="color: var(--primary-blue);">Ресурс</span>
+                    <a href="/">
+                      <img src="/img/logo.png" alt="ВентРесурс" style="height: 50px; width: auto; display: block;">
                     </a>
                 </div>
                 <nav class="nav-menu">
