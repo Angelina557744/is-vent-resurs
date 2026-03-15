@@ -4,10 +4,11 @@
     <aside style="background: var(--black); color: white; padding: 20px; border-radius: 10px; height: fit-content;">
         <h3 style="color: var(--primary-blue); margin-bottom: 20px;">Админка</h3>
         <nav style="display: flex; flex-direction: column; gap: 15px;">
-            <a href="/admin" style="color: white; text-decoration: none;"><i data-lucide="layout-dashboard"></i> Главная</a>
+            <a href="/admin" style="color: white; font-weight: bold;"><i data-lucide="layout-dashboard"></i> Главная</a>
+            <a href="/admin/home" style="color: #ccc; text-decoration: none;"><i data-lucide="home"></i> Контент Главной</a>
+           <a href="/admin/contacts" style="color: white; font-weight: bold;"><i data-lucide="phone"></i> Контакты</a>
             <a href="/admin/services" style="color: #ccc; text-decoration: none;"><i data-lucide="settings"></i> Услуги</a>
-            <a href="/admin/projects" style="color: #ccc; text-decoration: none;"><i data-lucide="clipboard-list"></i> Заказы</a>
-            <a href="/admin/users" style="color: #ccc; text-decoration: none;"><i data-lucide="users"></i> Пользователи</a>
+            <a href="/admin/projects" style="color: #ccc; text-decoration: none;"><i data-lucide="briefcase"></i> Наши работы</a>
         </nav>
     </aside>
 
@@ -22,13 +23,13 @@
                     <p style="font-size: 2rem; font-weight: bold;"><%= stats.users %></p>
                 </div>
                 <div style="background: var(--light-gray); padding: 20px; border-radius: 8px; border-top: 4px solid var(--accent-color);">
-                    <h4 style="color: var(--text-gray);">Всего заказов</h4>
-                    <p style="font-size: 2rem; font-weight: bold;"><%= stats.projects %></p>
+                    <h4 style="color: var(--text-gray);">Услуг в базе</h4>
+                    <p style="font-size: 2rem; font-weight: bold;"><%= stats.servicesCount %></p>
                 </div>
             </div>
 
             <div style="margin-top: 40px; padding: 20px; background: #e7f3ff; border-radius: 8px; color: #004085;">
-                <p><strong>Уведомление:</strong> Добро пожаловать в панель управления. Здесь вы можете изменять информацию об услугах и отслеживать статусы заявок клиентов.</p>
+                <p><strong>Уведомление:</strong> Вы вошли под учетной записью администратора.</p>
             </div>
         </div>
     </section>

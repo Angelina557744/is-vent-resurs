@@ -11,47 +11,50 @@
 <body>
     <header class="main-header">
         <div class="header-top">
-            <div class="container">
+            <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-contacts">
-                    <a href="tel:+73532439999"><i data-lucide="phone" size="16"></i> +7 (3532) 43-99-99</a>
-                    <a href="tel:88002013784"><i data-lucide="phone" size="16"></i> 8 (800) 201-37-84</a>
+                    <a href="tel:+73532439999"><i data-lucide="phone" size="14"></i> <%= settings.contact_phone_1 || '+7 (3532) 43-99-99' %></a>
+                    <a href="tel:88002013784"><i data-lucide="phone" size="14"></i> 8 (800) 201-37-84</a>
                 </div>
                 <div class="header-auth">
-    <% if (user) { %>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <a href="/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
-                <i data-lucide="user" size="16"></i> <%= user.full_name %>
-            </a>
-            <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-size: 0.9rem;">
-                <i data-lucide="log-out" size="16"></i> Выйти
-            </a>
-        </div>
-    <% } else { %>
-        <a href="/login" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px;">
-            <i data-lucide="user" size="18"></i> Войти / Личный кабинет
-        </a>
-    <% } %>
-</div>
+                    <% if (user) { %>
+                        <div style="display: flex; gap: 15px; align-items: center;">
+                            <% if (user.role === 'admin') { %>
+                                <a href="/admin" style="color: #ffd700; text-decoration: none; font-size: 0.9rem; font-weight: bold;">
+                                    <i data-lucide="layout-dashboard" size="16"></i> Админ-панель
+                                </a>
+                            <% } %>
+                            <a href="/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
+                                <i data-lucide="user" size="16"></i> <%= user.full_name %>
+                            </a>
+                            <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-size: 0.9rem;">
+                                <i data-lucide="log-out" size="16"></i> Выйти
+                            </a>
+                        </div>
+                    <% } else { %>
+                        <a href="/login" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 0.9rem;">
+                            <i data-lucide="user" size="18"></i> Войти
+                        </a>
+                    <% } %>
+                </div>
             </div>
         </div>
 
         <div class="header-bottom">
-            <div class="container">
+            <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
                 <div class="logo">
                     <a href="/">
-                      <img src="/img/logo.png" alt="ВентРесурс" style="height: 50px; width: auto; display: block;">
+                        <img src="/img/logo.png" alt="ВентРесурс" style="height: 50px; width: auto; display: block;">
                     </a>
                 </div>
                 <nav class="nav-menu">
                     <a href="/">Главная</a>
                     <a href="/services">Услуги</a>
-                    <a href="/catalog">Каталог</a>
                     <a href="/projects">Наши работы</a>
-                    <a href="/news">Новости</a>
                     <a href="/contacts">Контакты</a>
                 </nav>
                 <div class="header-actions">
-                    <button class="btn btn-outline">Обратный звонок</button>
+                    <button class="btn btn-blue" style="padding: 10px 20px; font-size: 0.8rem;">Обратный звонок</button>
                 </div>
             </div>
         </div>

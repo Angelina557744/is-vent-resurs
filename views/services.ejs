@@ -2,88 +2,132 @@
 
 <section class="services-hero">
     <div class="container">
-        <h1 class="animate__animated animate__fadeInDown" style="font-size: 3.5rem; letter-spacing: 2px;">УСЛУГИ ПОД КЛЮЧ</h1>
-        <p class="animate__animated animate__fadeInUp" style="max-width: 800px; margin: 20px auto; font-size: 1.2rem;">
-            Проектирование, поставка оборудования и монтаж инженерных систем для промышленных и коммерческих объектов по всей России и Казахстану.
+        <h1 class="animate__animated animate__fadeInDown" style="font-size: 3.5rem; letter-spacing: 2px; text-transform: uppercase;">
+            <%= settings.services_hero_title || 'УСЛУГИ ПОД КЛЮЧ' %>
+        </h1>
+        <p class="animate__animated animate__fadeInUp" style="max-width: 800px; margin: 20px auto; font-size: 1.2rem; font-weight: 200;">
+            <%= settings.services_hero_subtitle || 'Проектирование, поставка оборудования и монтаж инженерных систем для промышленных и коммерческих объектов по всей России и Казахстану.' %>
         </p>
-        <a href="#catalog" class="btn btn-blue animate__animated animate__zoomIn">Заказать проект</a>
+        <a href="#catalog" class="btn btn-blue animate__animated animate__zoomIn" style="font-weight: 600;">Заказать проект</a>
     </div>
 </section>
 
 <section class="container info-section">
     <div class="info-content">
-        <span style="color: var(--primary-blue); font-weight: bold; text-transform: uppercase;">Почему «ВентРесурс»?</span>
-        <h2 style="font-size: 2.5rem; margin-top: 10px;">Комплексный подход к инженерным решениям</h2>
+        <span style="color: var(--primary-blue); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Почему «ВентРесурс»?</span>
+        <h2 style="font-size: 2.5rem; margin-top: 10px; font-weight: 700;">Комплексный подход к инженерным решениям</h2>
         
-        <div class="benefit-item">
-            <i data-lucide="wrench" size="40"></i>
+        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 30px;">
+            <i data-lucide="wrench" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
             <div>
-                <h4>Инжиниринг</h4>
-                <p>Более 300 проектов «под ключ». Собственный проектный отдел.</p>
+                <h4 style="font-weight: 600; margin-bottom: 5px;">Инжиниринг</h4>
+                <p style="font-weight: 300;">Более 300 проектов «под ключ». Собственный проектный отдел.</p>
             </div>
         </div>
-        <div class="benefit-item">
-            <i data-lucide="truck" size="40"></i>
+
+        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 25px; transition-delay: 0.2s;">
+            <i data-lucide="truck" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
             <div>
-                <h4>Техника</h4>
-                <p>Собственная техника и склады. Материалы всегда в наличии.</p>
+                <h4 style="font-weight: 600; margin-bottom: 5px;">Техника</h4>
+                <p style="font-weight: 300;">Собственная техника и склады. Материалы всегда в наличии.</p>
             </div>
         </div>
-        <div class="benefit-item">
-            <i data-lucide="map" size="40"></i>
+
+        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 25px; transition-delay: 0.4s;">
+            <i data-lucide="map" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
             <div>
-                <h4>География</h4>
-                <p>Работаем по всей РФ и Республике Казахстан. Выезд специалиста — бесплатно.</p>
+                <h4 style="font-weight: 600; margin-bottom: 5px;">География</h4>
+                <p style="font-weight: 300;">Работаем по всей РФ и Республике Казахстан. Выезд специалиста — бесплатно.</p>
             </div>
         </div>
     </div>
 
     <div class="info-sidebar">
-        <div class="sidebar-form">
-            <h3>Нужна помощь?</h3>
-            <p style="font-size: 0.9rem; margin-bottom: 20px;">Оставьте заявку, инженер проконсультирует вас бесплатно.</p>
+        <div class="sidebar-form" style="background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border-top: 5px solid var(--primary-blue);">
+            <h3 style="font-weight: 700; margin-bottom: 10px;">Нужна помощь?</h3>
+            <p style="font-size: 0.9rem; margin-bottom: 20px; font-weight: 300;">Оставьте заявку, инженер проконсультирует вас бесплатно.</p>
+            
             <form action="/callback" method="POST">
-                <input type="text" name="name" placeholder="Ваше имя" required style="width:100%; padding:12px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
-                <input type="tel" name="phone" placeholder="Телефон" required style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:5px;">
-                <button type="submit" class="btn btn-blue" style="width: 100%;">Позвоните мне</button>
+                <div style="margin-bottom: 15px;">
+                    <input type="text" name="name" placeholder="Ваше имя" required 
+                           style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-family: 'Cascadia Code';">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <input type="tel" name="phone" placeholder="Телефон" required 
+                           style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-family: 'Cascadia Code';">
+                </div>
+                <button type="submit" class="btn btn-blue" style="width: 100%; padding: 15px; font-weight: 600; border-radius: 8px;">
+                    Позвоните мне
+                </button>
             </form>
-            <p style="font-size: 0.8rem; margin-top: 15px; color: var(--text-gray);">* Не любите формы? Звоните: +7 (3532) 43-99-99</p>
+            
+            <p style="font-size: 0.8rem; margin-top: 15px; color: var(--text-gray); text-align: center;">
+                * Звоните: <span style="font-weight: 600;"><%= settings.contact_phone_1 || '+7 (3532) 43-99-99' %></span>
+            </p>
         </div>
     </div>
 </section>
 
 <section id="catalog" style="background: var(--light-gray); padding: 80px 0;">
     <div class="container">
-        <h2 style="text-align: center; margin-bottom: 50px;">НАПРАВЛЕНИЯ ДЕЯТЕЛЬНОСТИ</h2>
+        <h2 style="text-align: center; margin-bottom: 50px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
+            Направления деятельности
+        </h2>
         
-        <div class="services-grid">
+        <div class="services-grid" id="servicesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
             <% services.forEach(service => { %>
-                <div class="service-card reveal-card">
-                  <div>
-                    <div class="service-image-container" style="width: 100%; height: 200px; overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
-                     <% if (service.image_url && service.image_url !== '') { %>
-                         <img src="/img/<%= service.image_url %>" 
-                              alt="<%= service.title %>" 
-                              loading="lazy" 
-                              style="width: 100%; height: 100%; object-fit: cover;">
-                          <% } else { %>
-                            <div style="width: 100%; height: 100%; background: var(--light-gray); display: flex; align-items: center; justify-content: center;">
-                          <i data-lucide="image" size="48" style="color: #ccc;"></i>
-                </div>
-            <% } %>
-        </div>
+                <div class="service-card reveal-on-scroll" style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #eee; transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div class="service-image-container" style="width: 100%; height: 200px; overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
+                            <% if (service.image_url && service.image_url !== '') { %>
+                                <img src="/img/<%= service.image_url %>" 
+                                     alt="<%= service.title %>" 
+                                     loading="lazy" 
+                                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
+                            <% } else { %>
+                                <div style="width: 100%; height: 100%; background: #f9f9f9; display: flex; align-items: center; justify-content: center;">
+                                    <i data-lucide="image" size="48" style="color: #ccc;"></i>
+                                </div>
+                            <% } %>
+                        </div>
 
-        <h3><%= service.title %></h3>
-        <p style="font-size: 0.9rem; color: var(--text-gray);"><%= service.description %></p>
-    </div>
-    
-    <a href="/services/<%= service.id %>" class="service-link">
-        Подробнее <i data-lucide="arrow-right" size="16"></i>
-    </a>
-</div>
+                        <h3 style="font-weight: 600; font-size: 1.2rem; margin-bottom: 15px; min-height: 2.4em; display: flex; align-items: center;">
+                            <%= service.title %>
+                        </h3>
+                        
+                        <p style="font-size: 0.85rem; color: var(--text-gray); font-weight: 300; line-height: 1.5; margin-bottom: 20px;">
+                            <%= service.description %>
+                        </p>
+                    </div>
+                    
+                    <a href="/services/<%= service.id %>" class="service-link" style="text-decoration: none; color: var(--primary-blue); font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.9rem;">
+                        ПОДРОБНЕЕ <i data-lucide="arrow-right" size="16"></i>
+                    </a>
+                </div>
             <% }) %>
         </div>
     </div>
 </section>
 
-<%- include('partials/footer') %>
+<%- include('partials/header') %> <%- include('partials/footer') %>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.reveal-on-scroll').forEach(card => {
+            observer.observe(card);
+        });
+    });
+</script>

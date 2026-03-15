@@ -1,0 +1,57 @@
+<%- include('../partials/header') %>
+
+<main class="container" style="margin-top: 40px; display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+    <aside style="background: var(--black); color: white; padding: 20px; border-radius: 10px; height: fit-content;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px;">Админка</h3>
+        <nav style="display: flex; flex-direction: column; gap: 15px;">
+            <a href="/admin" style="color: #ccc; text-decoration: none;"><i data-lucide="layout-dashboard"></i> Главная</a>
+            <a href="/admin/home" style="color: #ccc; text-decoration: none;"><i data-lucide="home"></i> Контент Главной</a>
+            <a href="/admin/services" style="color: #ccc; text-decoration: none;"><i data-lucide="settings"></i> Услуги</a>
+            <a href="/admin/contacts" style="color: white; font-weight: bold;"><i data-lucide="phone"></i> Контакты</a>
+            <a href="/admin/projects" style="color: #ccc; text-decoration: none;"><i data-lucide="briefcase"></i> Наши работы</a>
+        </nav>
+    </aside>
+
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <h2>Управление страницей контактов</h2>
+        <p style="color: #666; margin-bottom: 20px;">Здесь вы можете изменить адрес, телефоны, email и координаты карты.</p>
+        
+        <% if (typeof success !== 'undefined' || Array.isArray(texts) && texts.length > 0) { %>
+            <form action="/admin/contacts/update" method="POST">
+                <div style="display: grid; gap: 20px;">
+                    <% texts.forEach(text => { %>
+                        <div style="padding: 15px; border: 1px solid #eee; border-radius: 8px; background: #fafafa;">
+                            <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--primary-blue);">
+                                <%= text.description %>
+                            </label>
+                            
+                            <% if (text.setting_key.includes('address') || text.setting_key.includes('hours')) { %>
+                                <input type="text" name="<%= text.setting_key %>" value="<%= text.setting_value %>" 
+                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                            <% } else if (text.setting_key.includes('map')) { %>
+                                <input type="text" name="<%= text.setting_key %>" value="<%= text.setting_value %>" 
+                                       placeholder="Пример: 51.815344, 55.152431"
+                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-family: monospace;">
+                                <small style="color: #888;">Координаты берутся из Яндекс.Карт (Долгота, Широта)</small>
+                            <% } else { %>
+                                <input type="text" name="<%= text.setting_key %>" value="<%= text.setting_value %>" 
+                                       style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px;">
+                            <% } %>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <div style="margin-top: 30px; display: flex; gap: 15px;">
+                    <button type="submit" class="btn btn-blue" style="padding: 12px 30px;">Сохранить изменения</button>
+                    <a href="/contacts" target="_blank" class="btn btn-outline" style="padding: 12px 30px; text-decoration: none; display: inline-block;">Посмотреть на сайте</a>
+                </div>
+            </form>
+        <% } else { %>
+            <div style="padding: 20px; background: #fff3cd; color: #856404; border-radius: 8px;">
+                Данные в категории "contacts" не найдены. Убедитесь, что вы выполнили SQL запрос на добавление контактов.
+            </div>
+        <% } %>
+    </section>
+</main>
+
+<%- include('../partials/footer') %>

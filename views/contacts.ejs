@@ -1,0 +1,93 @@
+<%- include('partials/header') %>
+
+<section class="page-header" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/img/contacts-bg.jpg') center/cover; padding: 80px 0; color: white; text-align: center;">
+    <div class="container">
+        <h1 style="font-size: 3rem; margin-bottom: 10px;">Контакты</h1>
+        <p style="font-size: 1.2rem; opacity: 0.9;">Свяжитесь с нами любым удобным способом</p>
+    </div>
+</section>
+
+<section style="padding: 60px 0;">
+    <div class="container">
+        <div style="display: flex; flex-wrap: wrap; gap: 40px; align-items: stretch;">
+            
+            <div style="flex: 1; min-width: 320px;">
+                <div class="contact-item">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 5px;">Наш адрес:</h3>
+                    <p><%= settings.contact_address %></p>
+                    <p style="font-size: 0.9rem; color: #777;"><%= settings.contact_address_note %></p>
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+                <div class="contact-item">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 5px;">Телефоны:</h3>
+                    <p><strong><%= settings.contact_phone_main %></strong> (Бухгалтерия, заявки)</p>
+                    <p><strong><%= settings.contact_phone_extra %></strong> (Для регионов РФ)</p>
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+                <div class="contact-item">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 5px;">Часы работы:</h3>
+                    <p><%= settings.contact_work_hours %></p>
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+                <div class="contact-item">
+                    <h3 style="color: var(--primary-blue); margin-bottom: 5px;">Email:</h3>
+                    <p><a href="mailto:<%= settings.contact_email %>" style="color: inherit;"><%= settings.contact_email %></a></p>
+                </div>
+                
+                <a href="#feedback" class="btn btn-blue" style="width: 100%; margin-top: 30px; text-align: center; display: block; padding: 15px;">Задать вопрос</a>
+            </div>
+
+            <div style="flex: 1; min-width: 320px; min-height: 450px; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1);">
+                <div id="map" style="width: 100%; height: 100%;"></div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section style="padding: 60px 0; background: #f9f9f9;">
+    <div class="container">
+        <h2 style="text-align: center; margin-bottom: 40px;">Наш офис и производство</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+            <img src="/img/office-1.jpg" style="width: 100%; height: 250px; object-fit: cover; border-radius: 20px;" alt="Офис">
+            <img src="/img/office-2.jpg" style="width: 100%; height: 250px; object-fit: cover; border-radius: 20px;" alt="Офис">
+            <img src="/img/office-3.jpg" style="width: 100%; height: 250px; object-fit: cover; border-radius: 20px;" alt="Производство">
+            <img src="/img/office-4.jpg" style="width: 100%; height: 250px; object-fit: cover; border-radius: 20px;" alt="Производство">
+        </div>
+    </div>
+</section>
+
+<section id="feedback" style="padding: 100px 0;">
+    <div class="container">
+        <div style="max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 15px 50px rgba(0,0,0,0.08);">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h2 style="margin-bottom: 10px;">Остались вопросы?</h2>
+                <p style="color: #666;">Напишите нам, и мы свяжемся с вами в ближайшее время.</p>
+            </div>
+            
+            <form action="/api/contact" method="POST" style="display: flex; flex-direction: column; gap: 15px;">
+                <input type="text" name="name" placeholder="Ваше имя" required style="padding: 15px; border: 1px solid #ddd; border-radius: 10px;">
+                <div style="display: flex; gap: 15px;">
+                    <input type="tel" name="phone" placeholder="Телефон" required style="flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 10px;">
+                    <input type="email" name="email" placeholder="Email" required style="flex: 1; padding: 15px; border: 1px solid #ddd; border-radius: 10px;">
+                </div>
+                <textarea name="message" placeholder="Ваш вопрос" rows="4" required style="padding: 15px; border: 1px solid #ddd; border-radius: 10px; resize: none;"></textarea>
+                <button type="submit" class="btn btn-blue" style="padding: 15px; font-weight: bold; font-size: 1rem;">Отправить сообщение</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<div id="map-data" 
+     data-coords="<%= settings.contact_map_coords || '51.815344, 55.152431' %>"
+     data-address="<%= settings.contact_address || 'г. Оренбург, ул. Просторная 23/3' %>">
+</div>
+<div id="map" style="width: 100%; height: 100%;"></div>
+
+<script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+<script src="/js/map.js"></script>
+
+<%- include('partials/footer') %>

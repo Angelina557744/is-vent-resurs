@@ -36,7 +36,26 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 24 } // Сессия на 1 день
 }));
 
-// Проброс данных пользователя во все шаблоны EJS
+// Middleware: Достаем настройки из БД и делаем их доступными везде
+app.use(async (req, res, next) => {
+    try {
+        const [rows] = await db.query('SELECT setting_key, setting_value FROM site_settings');
+        const settings = {};
+        rows.forEach(row => {
+            settings[row.setting_key] = row.setting_value;
+        });
+
+        // Это делает объект settings доступным во всех .ejs файлах без передачи вручную
+        res.locals.settings = settings; 
+        next();
+    } catch (err) {
+        console.error('Ошибка в Middleware настроек:', err);
+        res.locals.settings = {}; // Защита от падения
+        next();
+    }
+});
+
+
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
@@ -44,8 +63,24 @@ app.use((req, res, next) => {
 
 
 
-app.get('/', (req, res) => {
-    res.render('index', { title: 'Главная | ВентРесурс' });
+app.get('/', async (req, res) => {
+    try {
+        const [slides] = await db.query('SELECT * FROM home_slider ORDER BY order_index ASC');
+        const [advantages] = await db.query('SELECT * FROM advantages ORDER BY order_index ASC');
+        const [reps] = await db.query('SELECT * FROM partners WHERE partner_type = "representative"');
+        const [clients] = await db.query('SELECT * FROM partners WHERE partner_type = "client"');
+        
+        res.render('index', { 
+            title: 'Главная | ВентРесурс',
+            slides,
+            advantages,
+            reps,
+            clients
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка загрузки главной страницы');
+    }
 });
 
 function isAdmin(req, res, next) {
@@ -61,32 +96,10 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', async (req, res) => {
-    const { username, full_name, email, password } = req.body; // Добавили username
-    
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        await db.query(
-            'INSERT INTO users (username, full_name, email, password, role) VALUES (?, ?, ?, ?, ?)',
-            [username, full_name, email, hashedPassword, 'user']
-        );
-        res.redirect('/login');
-    } catch (err) {
-        console.error(err);
-        res.send('Ошибка при регистрации. Возможно, логин или email уже заняты.');
-    }
-});
-
-app.get('/login', (req, res) => {
-    res.render('login', { title: 'Вход | ВентРесурс' });
-});
-
-// ... (начало файла без изменений до маршрута регистрации)
-
-app.post('/register', async (req, res) => {
     const { username, full_name, email, password } = req.body;
     
     try {
-        // Проверка: не занят ли логин или email заранее (хороший тон)
+        // Проверка: не занят ли логин или email заранее
         const [existingUser] = await db.query('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
         if (existingUser.length > 0) {
             return res.render('register', { title: 'Регистрация', error: 'Логин или Email уже заняты' });
@@ -104,7 +117,10 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// Исправленный вход: добавим обработку неверных данных без вылета на пустую страницу
+app.get('/login', (req, res) => {
+    res.render('login', { title: 'Вход | ВентРесурс' });
+});
+
 app.post('/login', async (req, res) => {
     const { login, password } = req.body;
     try {
@@ -124,7 +140,6 @@ app.post('/login', async (req, res) => {
                 full_name: user.full_name,
                 role: user.role
             };
-            // Сохраняем сессию принудительно перед редиректом (защита от багов сессий)
             req.session.save(() => {
                 res.redirect(user.role === 'admin' ? '/admin' : '/profile');
             });
@@ -136,8 +151,6 @@ app.post('/login', async (req, res) => {
         res.status(500).send('Ошибка сервера');
     }
 });
-
-// ... (остальное без изменений)
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
@@ -151,7 +164,6 @@ app.get('/profile', (req, res) => {
 
 app.get('/admin', isAdmin, async (req, res) => {
     try {
-        // Получаем краткую статистику для главной страницы админки
         const [usersCount] = await db.query('SELECT COUNT(*) as count FROM users');
         const [projectsCount] = await db.query('SELECT COUNT(*) as count FROM projects');
         
@@ -168,7 +180,6 @@ app.get('/admin', isAdmin, async (req, res) => {
     }
 });
 
-// Страница управления услугами (Список всех услуг)
 app.get('/admin/services', isAdmin, async (req, res) => {
     try {
         const [services] = await db.query('SELECT * FROM services');
@@ -182,7 +193,6 @@ app.get('/admin/services', isAdmin, async (req, res) => {
     }
 });
 
-// Обработка добавления новой услуги
 app.post('/admin/services/add', isAdmin, async (req, res) => {
     const { title, description, price, image_url } = req.body;
     try {
@@ -197,7 +207,6 @@ app.post('/admin/services/add', isAdmin, async (req, res) => {
     }
 });
 
-// Обработка удаления услуги
 app.post('/admin/services/delete/:id', isAdmin, async (req, res) => {
     try {
         await db.query('DELETE FROM services WHERE id = ?', [req.params.id]);
@@ -207,11 +216,6 @@ app.post('/admin/services/delete/:id', isAdmin, async (req, res) => {
         res.status(500).send('Ошибка при удалении');
     }
 });
-
-
-
-
-
 
 app.get('/reset-admin-password', async (req, res) => {
     try {
@@ -230,6 +234,69 @@ app.get('/reset-admin-password', async (req, res) => {
     }
 });
 
+app.get('/admin/content', isAdmin, async (req, res) => {
+    const [settings] = await db.query('SELECT * FROM site_settings');
+    res.render('admin/content', { title: 'Управление текстами', settings: settings });
+});
+
+app.post('/admin/content/update', isAdmin, async (req, res) => {
+    const updates = req.body;
+    try {
+        for (let key in updates) {
+            await db.query('UPDATE site_settings SET setting_value = ? WHERE setting_key = ?', [updates[key], key]);
+        }
+        res.redirect('/admin/content');
+    } catch (err) {
+        res.status(500).send('Ошибка обновления');
+    }
+});
+
+app.get('/admin/home', isAdmin, async (req, res) => {
+    try {
+        const [texts] = await db.query('SELECT * FROM site_settings WHERE category IN ("hero", "about", "geo")');
+        const [slides] = await db.query('SELECT * FROM home_slider ORDER BY order_index');
+        const [advantages] = await db.query('SELECT * FROM advantages ORDER BY order_index');
+        const [partners] = await db.query('SELECT * FROM partners');
+
+        res.render('admin/home_edit', {
+            title: 'Управление главной | Админ',
+            texts,
+            slides,
+            advantages,
+            partners
+        });
+    } catch (err) {
+        res.status(500).send('Ошибка загрузки данных для редактирования');
+    }
+});
+
+app.post('/admin/home/update-texts', isAdmin, async (req, res) => {
+    const updates = req.body;
+    try {
+        for (let key in updates) {
+            await db.query('UPDATE site_settings SET setting_value = ? WHERE setting_key = ?', [updates[key], key]);
+        }
+        res.redirect('/admin/home?success=1');
+    } catch (err) {
+        res.status(500).send('Ошибка обновления текстов');
+    }
+});
+
+app.post('/admin/home/update-advantages', isAdmin, async (req, res) => {
+    const { id, title, description, icon_name } = req.body;
+    try {
+        for (let i = 0; i < id.length; i++) {
+            await db.query(
+                'UPDATE advantages SET title = ?, description = ?, icon_name = ? WHERE id = ?',
+                [title[i], description[i], icon_name[i], id[i]]
+            );
+        }
+        res.redirect('/admin/home?success=1');
+    } catch (err) {
+        res.status(500).send('Ошибка обновления преимуществ');
+    }
+});
+
 app.get('/services', async (req, res) => {
     try {
         const [services] = await db.query('SELECT * FROM services');
@@ -240,6 +307,42 @@ app.get('/services', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).send('Ошибка загрузки услуг');
+    }
+});
+
+// ПУБЛИЧНАЯ СТРАНИЦА КОНТАКТОВ
+app.get('/contacts', (req, res) => {
+    // Данные settings берутся автоматически из Middleware (res.locals.settings)
+    res.render('contacts', { 
+        title: 'Контакты | ВентРесурс'
+    });
+});
+
+// АДМИНКА: СТРАНИЦА РЕДАКТИРОВАНИЯ КОНТАКТОВ
+app.get('/admin/contacts', isAdmin, async (req, res) => {
+    try {
+        const [texts] = await db.query('SELECT * FROM site_settings WHERE category = "contacts"');
+        res.render('admin/contacts_edit', {
+            title: 'Управление контактами | Админ',
+            texts
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка загрузки страницы управления контактами');
+    }
+});
+
+// АДМИНКА: СОХРАНЕНИЕ КОНТАКТОВ
+app.post('/admin/contacts/update', isAdmin, async (req, res) => {
+    const updates = req.body;
+    try {
+        for (let key in updates) {
+            await db.query('UPDATE site_settings SET setting_value = ? WHERE setting_key = ?', [updates[key], key]);
+        }
+        res.redirect('/admin/contacts?success=1');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка обновления контактов');
     }
 });
 

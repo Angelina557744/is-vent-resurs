@@ -1,9 +1,113 @@
 <%- include('partials/header') %>
 
-<main class="container">
-    <h1 class="animate__animated animate__fadeIn">Добро пожаловать в ВентРесурс</h1>
-    <p>Многофункциональная система управления услугами.</p>
-    <i data-lucide="wind"></i>
-</main>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+<section class="home-hero">
+    <div class="swiper hero-swiper">
+        <div class="swiper-wrapper">
+            <% slides.forEach(slide => { %>
+                <div class="swiper-slide" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,86,179,0.4)), url('/img/<%= slide.image_url %>');">
+                </div>
+            <% }) %>
+        </div>
+    </div>
+    <div class="hero-content">
+        <div class="container">
+            <h1 class="animate__animated animate__fadeInDown"><%= settings.home_hero_title %></h1>
+            <p class="animate__animated animate__fadeInUp"><%= settings.home_hero_subtitle %></p>
+            <span class="extra-text"><%= settings.home_hero_extra %></span>
+            <div style="margin-top: 30px;">
+                <a href="#callback" class="btn-hero">Рассчитать проект</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-section">
+    <div class="container">
+        <div class="section-header">
+            <h2><%= settings.home_about_title %></h2>
+            <div class="line"></div>
+        </div>
+<div class="about-text-columns">
+    <% if (settings && settings.home_about_text) { %>
+        <%- settings.home_about_text.replace(/\r\n/g, '<br>') %>
+    <% } else { %>
+        <p>Текст о компании находится в стадии заполнения...</p>
+    <% } %>
+</div>
+    </div>
+</section>
+
+<section class="advantages-section">
+    <div class="container">
+        <h2 class="text-center">Наши преимущества</h2>
+        <div class="advantages-grid">
+            <% advantages.forEach(adv => { %>
+                <div class="adv-card">
+                    <div class="adv-icon">
+                        <i data-lucide="<%= adv.icon_name %>"></i>
+                    </div>
+                    <h3><%= adv.title %></h3>
+                    <p><%= adv.description %></p>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
+
+<section class="partners-ticker">
+    <div class="container">
+        <h3>Компания является официальным представителем:</h3>
+    </div>
+    <div class="ticker-wrapper">
+        <div class="ticker-track">
+            <% [...reps, ...reps].forEach(rep => { %>
+                <div class="ticker-item">
+                    <img src="/img/<%= rep.logo_url %>" alt="Partner">
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
+
+<section class="geo-section">
+    <div class="container">
+        <div class="geo-grid">
+            <div class="geo-content">
+                <h2><%= settings.home_geo_title %></h2>
+                <p><%= settings.home_geo_text %></p>
+            </div>
+            <div class="geo-map">
+                <img src="/img/<%= settings.home_geo_map %>" alt="Map">
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="partners-ticker clients">
+    <div class="container">
+        <h3>Клиенты и партнеры компании</h3>
+    </div>
+    <div class="ticker-wrapper">
+        <div class="ticker-track reverse">
+            <% [...clients, ...clients].forEach(client => { %>
+                <div class="ticker-item">
+                    <img src="/img/<%= client.logo_url %>" alt="Client">
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
 
 <%- include('partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+    new Swiper('.hero-swiper', {
+        loop: true,
+        effect: 'fade',
+        autoplay: { delay: 5000 },
+        speed: 1000
+    });
+</script>
