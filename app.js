@@ -91,6 +91,15 @@ function isAdmin(req, res, next) {
     res.status(403).send('Доступ только для администраторов');
 }
 
+// Функция для проверки, авторизован ли пользователь
+function isAuth(req, res, next) {
+    if (req.session && req.session.user) {
+        return next(); // Пользователь авторизован, идем дальше
+    }
+    // Если не авторизован — отправляем на страницу входа
+    res.redirect('/login');
+}
+
 app.get('/register', (req, res) => {
     res.render('register', { title: 'Регистрация | ВентРесурс' });
 });
@@ -157,27 +166,90 @@ app.get('/logout', (req, res) => {
     res.redirect('/');
 });
 
-app.get('/profile', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    res.render('profile', { title: 'Личный кабинет | ВентРесурс' });
+app.get('/profile', isAuth, async (req, res) => {
+    try {
+        // Получаем результаты квиза именно для этого пользователя
+        const [quizResults] = await db.query(
+            'SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC', 
+            [req.session.user.id]
+        );
+
+        res.render('profile', { 
+            title: 'Личный кабинет | ВентРесурс',
+            user: req.session.user,
+            quizResults: quizResults // Передаем данные на страницу
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка при загрузке профиля');
+    }
+});
+
+// Страница квиза в личном кабинете
+app.get('/profile/quiz', isAuth, (req, res) => {
+    res.render('quiz', { 
+        title: 'Подбор системы вентиляции | ВентРесурс',
+        user: req.session.user 
+    });
+});
+
+// Обработка результатов квиза
+app.post('/api/quiz-save', isAuth, async (req, res) => {
+    const { building_type, area, people_count, budget_range, estimated_price } = req.body;
+    const userId = req.session.user.id;
+
+    try {
+        await db.query(
+            'INSERT INTO quiz_results (user_id, building_type, area, people_count, budget_range, estimated_price) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, building_type, area, people_count, budget_range, estimated_price]
+        );
+        res.json({ success: true, message: 'Результат сохранен' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Ошибка БД' });
+    }
+});
+
+// СТРАНИЦА "НАШИ РАБОТЫ"
+app.get('/projects', async (req, res) => {
+    try {
+        // Получаем проекты из созданной нами таблицы
+        const [projects] = await db.query('SELECT * FROM projects ORDER BY year DESC');
+        
+        res.render('projects', { 
+            title: 'Наши работы | ВентРесурс',
+            projects: projects
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка при загрузке портфолио');
+    }
 });
 
 app.get('/admin', isAdmin, async (req, res) => {
     try {
         const [usersCount] = await db.query('SELECT COUNT(*) as count FROM users');
         const [projectsCount] = await db.query('SELECT COUNT(*) as count FROM projects');
+        const [servicesCount] = await db.query('SELECT COUNT(*) as count FROM services');
+        
+        // Получаем последние 5 расчетов из квиза для админки
+        const [recentQuiz] = await db.query(`
+            SELECT qr.*, u.full_name, u.phone 
+            FROM quiz_results qr 
+            JOIN users u ON qr.user_id = u.id 
+            ORDER BY qr.created_at DESC LIMIT 5
+        `);
         
         res.render('admin/dashboard', { 
-            title: 'Панель управления | ВентРесурс',
+            title: 'Панель управления',
             stats: {
                 users: usersCount[0].count,
-                projects: projectsCount[0].count
-            }
+                projects: projectsCount[0].count,
+                services: servicesCount[0].count
+            },
+            recentQuiz: recentQuiz // Передаем в админку
         });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Ошибка загрузки админ-панели');
-    }
+    } catch (err) { /* ... */ }
 });
 
 app.get('/admin/services', isAdmin, async (req, res) => {
@@ -310,6 +382,50 @@ app.get('/services', async (req, res) => {
     }
 });
 
+// --- УПРАВЛЕНИЕ ПРОЕКТАМИ В АДМИНКЕ ---
+
+// 1. Страница списка проектов
+app.get('/admin/projects', isAdmin, async (req, res) => {
+    try {
+        const [projects] = await db.query('SELECT * FROM projects ORDER BY year DESC');
+        res.render('admin/projects_edit', {
+            title: 'Управление проектами | Админ',
+            projects: projects
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка загрузки списка проектов');
+    }
+});
+
+// 2. Добавление нового проекта
+app.post('/admin/projects/add', isAdmin, async (req, res) => {
+    const { year, title, object_type, image_url } = req.body;
+    // Создаем простой slug из года (например, projects-2024)
+    const slug = `projects-${year}-${Date.now()}`; 
+    try {
+        await db.query(
+            'INSERT INTO projects (year, title, object_type, image_url, slug) VALUES (?, ?, ?, ?, ?)',
+            [year, title, object_type, image_url || 'project-placeholder.jpg', slug]
+        );
+        res.redirect('/admin/projects?success=1');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка при добавлении проекта');
+    }
+});
+
+// 3. Удаление проекта
+app.post('/admin/projects/delete/:id', isAdmin, async (req, res) => {
+    try {
+        await db.query('DELETE FROM projects WHERE id = ?', [req.params.id]);
+        res.redirect('/admin/projects?deleted=1');
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Ошибка при удалении проекта');
+    }
+});
+
 // ПУБЛИЧНАЯ СТРАНИЦА КОНТАКТОВ
 app.get('/contacts', (req, res) => {
     // Данные settings берутся автоматически из Middleware (res.locals.settings)
@@ -345,6 +461,8 @@ app.post('/admin/contacts/update', isAdmin, async (req, res) => {
         res.status(500).send('Ошибка обновления контактов');
     }
 });
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

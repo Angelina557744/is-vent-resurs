@@ -22,4 +22,48 @@
     </div>
 </main>
 
+<div style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); padding: 30px; border-radius: 20px; border: 1px solid #d0e3ff; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
+    <div style="flex: 1;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+            <i data-lucide="calculator"></i> Подбор системы онлайн
+        </h3>
+        <p style="color: #555; font-size: 0.95rem; line-height: 1.5;">
+            Ответьте на 4 вопроса о вашем объекте, и мы рассчитаем ориентировочную стоимость системы вентиляции и кондиционирования за 1 минуту.
+        </p>
+        <a href="/profile/quiz" class="btn btn-blue" style="margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+            Начать расчет <i data-lucide="chevron-right" size="18"></i>
+        </a>
+    </div>
+    <div style="flex-shrink: 0; opacity: 0.8;" class="hide-mobile">
+        <i data-lucide="wind" style="width: 80px; height: 80px; color: var(--primary-blue);"></i>
+    </div>
+</div>
+
+<% if (typeof quizResults !== 'undefined' && quizResults.length > 0) { %>
+    <div style="margin-top: 40px;">
+        <h3 style="margin-bottom: 20px;">Ваши расчеты</h3>
+        <div style="display: grid; gap: 15px;">
+            <% quizResults.forEach(result => { %>
+                <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: bold; font-size: 1.1rem;"><%= result.building_type %> (<%= result.area %> м²)</div>
+                        <div style="color: #888; font-size: 0.85rem;">Дата расчета: <%= new Date(result.created_at).toLocaleDateString() %></div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="color: var(--primary-blue); font-weight: bold; font-size: 1.2rem;"><%= result.estimated_price.toLocaleString() %> руб.</div>
+                        <div style="font-size: 0.8rem; color: #28a745;">Статус: Передано инженеру</div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+<% } %>
+
+<style>
+    @media (max-width: 600px) {
+        .hide-mobile { display: none; }
+    }
+</style>
+
 <%- include('partials/footer') %>
+

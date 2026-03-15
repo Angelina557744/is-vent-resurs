@@ -1,0 +1,151 @@
+<%- include('partials/header') %>
+
+<style>
+    /* Применение шрифта ко всей странице */
+    body {
+        font-family: 'Cascadia Code', 'Courier New', Courier, monospace;
+    }
+
+    .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+        margin-top: 40px;
+    }
+
+    .project-card {
+        text-decoration: none;
+        color: inherit;
+        background: #fff;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: block;
+    }
+
+    /* Эффект приподнимания */
+    .project-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    }
+
+    .project-image-box {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        background-color: #e0e0e0; /* Серый плейсхолдер */
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .project-image-box i {
+        color: #999;
+        font-size: 3rem;
+    }
+
+    /* Эффект увеличения изображения */
+    .project-image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .project-card:hover .project-image-box img {
+        transform: scale(1.1);
+    }
+
+    .project-info {
+        padding: 20px 0;
+    }
+
+    .project-info h3 {
+        margin: 0;
+        font-size: 1.4rem;
+        color: var(--black);
+    }
+
+    .project-type {
+        color: #777;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+
+    .btn-more {
+        color: var(--primary-blue);
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 15px;
+        transition: color 0.3s;
+    }
+
+    .project-card:hover .btn-more {
+        color: #0056b3; /* Ярче при наведении */
+    }
+
+    /* Адаптивность: 2x2 -> 1x4 */
+    @media (max-width: 768px) {
+        .projects-grid {
+            grid-template-columns: 1fr;
+        }
+        .page-header-title {
+            font-size: 2.2rem;
+        }
+    }
+</style>
+
+<section style="padding: 60px 0 20px; background: #fff;">
+    <div class="container">
+        <h1 class="page-header-title" style="margin-bottom: 15px; font-weight: bold;">Наши работы</h1>
+        <p style="color: #666; max-width: 800px; font-size: 1.1rem;">
+            <%= settings.projects_page_intro || 'На этой странице собраны реализованные проекты компании «ВентРесурс». Вы можете оценить масштаб и сложность объектов, с которыми мы работали.' %>
+        </p>
+    </div>
+</section>
+
+<section style="padding: 20px 0 60px; background: #fff;">
+    <div class="container">
+        <div style="line-height: 1.8; text-align: justify; border-left: 4px solid var(--primary-blue); padding-left: 25px;">
+            <p>За годы своего существования <span style="color: var(--primary-blue); font-weight: bold;">«Компания ВентРесурс»</span> реализовала несколько сотен проектов различного объема и сложности на территории Оренбургской области, других регионов Российской Федерации и Республики Казахстана.</p>
+            <p>Применение передовых технологий, индивидуальный подход и многолетний опыт работы — три кита, на которых держится успех нашего бизнеса. Мы распространяем гарантию качества не только на поставляемое вентиляционное оборудование, но и на уровень оказываемого сервиса, начиная с проекта вентиляции и кондиционирования и заканчивая производимыми работами.</p>
+            <p>Системы вентиляции, кондиционирования и отопления, проложенные нашими специалистами, эффективно функционируют на протяжении многих лет на объектах административного, промышленного, социального и сельскохозяйственного назначения. К ним относятся крупнейшие торговые центры и рестораны, медицинские и образовательные учреждения, лаборатории и научно-исследовательские центры, заводы и комбинаты в Оренбургской области и пограничных территориях Казахстана.</p>
+            <p>Заказывая проект в «ВентРесурс», вы получаете профессиональный и комплексный подход к установке систем кондиционирования, отопления и вентиляции по доступной цене.</p>
+        </div>
+    </div>
+</section>
+
+<section style="padding: 80px 0; background: #fdfdfd;">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 50px;">
+            <h2 style="font-size: 2.5rem;">Выполненные проекты</h2>
+            <p style="color: #888;">Ниже представлены некоторые из наших работ за последние годы.</p>
+        </div>
+
+       <div class="projects-grid">
+    <% projects.forEach(project => { %>
+        <a href="#" class="project-card">
+            <div class="project-image-box">
+                <% 
+                   if (project.image_url && project.image_url.trim() !== '') { 
+                %>
+                    <img src="/img/<%= project.image_url %>" alt="<%= project.title %>" onerror="this.onerror=null; this.src='/img/project-placeholder.jpg';">
+                <% } else { %>
+                    <i data-lucide="image"></i>
+                <% } %>
+            </div>
+            <div class="project-info">
+                <h3><%= project.title %></h3>
+                <% if (project.object_type) { %>
+                <% } %>
+                <span class="btn-more">Подробнее →</span>
+            </div>
+        </a>
+    <% }) %>
+</div>
+    </div>
+</section>
+
+<%- include('partials/footer') %>
