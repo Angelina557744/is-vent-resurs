@@ -228,28 +228,32 @@ app.get('/projects', async (req, res) => {
 
 app.get('/admin', isAdmin, async (req, res) => {
     try {
-        const [usersCount] = await db.query('SELECT COUNT(*) as count FROM users');
-        const [projectsCount] = await db.query('SELECT COUNT(*) as count FROM projects');
-        const [servicesCount] = await db.query('SELECT COUNT(*) as count FROM services');
+        const [users] = await db.query('SELECT COUNT(*) as count FROM users');
+        const [projects] = await db.query('SELECT COUNT(*) as count FROM projects');
+        const [services] = await db.query('SELECT COUNT(*) as count FROM services');
         
-        // Получаем последние 5 расчетов из квиза для админки
+        // Достаем результаты квиза (если таблицы еще нет, закомментируй эту часть)
         const [recentQuiz] = await db.query(`
             SELECT qr.*, u.full_name, u.phone 
             FROM quiz_results qr 
             JOIN users u ON qr.user_id = u.id 
             ORDER BY qr.created_at DESC LIMIT 5
-        `);
-        
+        `).catch(() => [[]]); // Защита: если таблицы нет, вернет пустой массив
+
         res.render('admin/dashboard', { 
             title: 'Панель управления',
+            user: req.session.user,
             stats: {
-                users: usersCount[0].count,
-                projects: projectsCount[0].count,
-                services: servicesCount[0].count
+                users: users[0]?.count || 0,
+                projects: projects[0]?.count || 0,
+                services: services[0]?.count || 0 // Передаем как services
             },
-            recentQuiz: recentQuiz // Передаем в админку
+            recentQuiz: recentQuiz || []
         });
-    } catch (err) { /* ... */ }
+    } catch (err) {
+        console.error("ОШИБКА АДМИНКИ:", err);
+        res.status(500).send('Ошибка сервера в админ-панели');
+    }
 });
 
 app.get('/admin/services', isAdmin, async (req, res) => {
