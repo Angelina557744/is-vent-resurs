@@ -2,18 +2,18 @@
 
 <main class="container" style="margin-top: 40px; display: grid; grid-template-columns: 250px 1fr; gap: 30px; align-items: start;">
     
-    <aside style="background: var(--black); color: white; padding: 20px; border-radius: 15px; min-height: 450px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-        <h3 style="color: var(--primary-blue); margin-bottom: 25px; font-size: 1.2rem; padding-left: 10px;">Админ-панель</h3>
-        <nav style="display: flex; flex-direction: column; gap: 10px;">
-            <a href="/admin" style="background: rgba(255,255,255,0.1); color: white; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px;"><i data-lucide="layout-dashboard" size="18"></i> Главная</a>
-            <a href="/admin/home" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s;"><i data-lucide="home" size="18"></i> Контент Главной</a>
-            <a href="/admin/services" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s;"><i data-lucide="settings" size="18"></i> Услуги</a>
-            <a href="/admin/projects" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s;"><i data-lucide="briefcase" size="18"></i> Наши работы</a>
-            <a href="/admin/contacts" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s;"><i data-lucide="phone" size="18"></i> Контакты</a>
+    <aside style="background: var(--black); color: white; padding: 20px; border-radius: 10px; height: fit-content; min-height: 400px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px; font-size: 1.2rem;">Админ-панель</h3>
+        <nav style="display: flex; flex-direction: column; gap: 15px;">
+            <a href="/admin" style="color: white; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="layout-dashboard" size="18"></i> Главная</a>
+            <a href="/admin/home" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="home" size="18"></i> Контент Главной</a>
+            <a href="/admin/services" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="settings" size="18"></i> Услуги</a>
+            <a href="/admin/callbacks" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone-call" size="18"></i> Заявки на звонок</a>
+            <a href="/admin/projects" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="briefcase" size="18"></i> Наши работы</a>
+            <a href="/admin/contacts" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone" size="18"></i> Контакты</a>
             <a href="/admin/content" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="file-text" size="18"></i> Тексты сайта</a>
-            <a href="/admin/content" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; transition: 0.3s;"><i data-lucide="file-text" size="18"></i> Тексты сайта</a>
-            <hr style="border: 0; border-top: 1px solid #444; margin: 15px 0;">
-            <a href="/" style="color: #ffb3b3; text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 12px;"><i data-lucide="external-link" size="18"></i> На сайт</a>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <a href="/" style="color: #ffb3b3; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="external-link" size="18"></i> На сайт</a>
         </nav>
     </aside>
 
@@ -26,17 +26,26 @@
                 
                 <div style="background: #f0f7ff; border-left: 5px solid var(--primary-blue); padding: 20px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #555; font-weight: bold;">Услуг в базе</span>
-                        <i data-lucide="settings" style="color: var(--primary-blue);"></i>
+                        <span style="color: #555; font-weight: bold;">Услуг</span>
+                        <i data-lucide="settings" size="20" style="color: var(--primary-blue);"></i>
                     </div>
                     <h2 style="font-size: 2.5rem; margin: 10px 0;"><%= stats.services %></h2>
                     <a href="/admin/services" style="color: var(--primary-blue); font-size: 0.85rem; text-decoration: none;">Управлять →</a>
                 </div>
 
+                <div style="background: #fff0f0; border-left: 5px solid #dc3545; padding: 20px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #555; font-weight: bold;">Заявок на звонок</span>
+                        <i data-lucide="phone-call" size="20" style="color: #dc3545;"></i>
+                    </div>
+                    <h2 style="font-size: 2.5rem; margin: 10px 0;"><%= stats.callbacks || 0 %></h2>
+                    <a href="/admin/callbacks" style="color: #dc3545; font-size: 0.85rem; text-decoration: none;">Посмотреть →</a>
+                </div>
+
                 <div style="background: #fff9f0; border-left: 5px solid #ffa500; padding: 20px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #555; font-weight: bold;">Проектов</span>
-                        <i data-lucide="briefcase" style="color: #ffa500;"></i>
+                        <i data-lucide="briefcase" size="20" style="color: #ffa500;"></i>
                     </div>
                     <h2 style="font-size: 2.5rem; margin: 10px 0;"><%= stats.projects %></h2>
                     <a href="/admin/projects" style="color: #ffa500; font-size: 0.85rem; text-decoration: none;">Управлять →</a>
@@ -45,7 +54,7 @@
                 <div style="background: #f0fff4; border-left: 5px solid #28a745; padding: 20px; border-radius: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span style="color: #555; font-weight: bold;">Пользователей</span>
-                        <i data-lucide="users" style="color: #28a745;"></i>
+                        <i data-lucide="users" size="20" style="color: #28a745;"></i>
                     </div>
                     <h2 style="font-size: 2.5rem; margin: 10px 0;"><%= stats.users %></h2>
                     <span style="color: #888; font-size: 0.85rem;">Всего зарегистрировано</span>
@@ -53,40 +62,34 @@
 
             </div>
 
-            <h3 style="margin-bottom: 20px;">Быстрые действия</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                <a href="/admin/home" style="display: block; padding: 20px; border: 1px solid #eee; border-radius: 10px; text-decoration: none; color: inherit; transition: 0.3s;" onmouseover="this.style.borderColor='var(--primary-blue)'" onmouseout="this.style.borderColor='#eee'">
-                    <h4 style="margin-bottom: 5px; color: var(--primary-blue);">Изменить тексты Главной</h4>
-                    <p style="font-size: 0.85rem; color: #777;">Заголовки, преимущества и данные на основной странице.</p>
-                </a>
-                <a href="/admin/contacts" style="display: block; padding: 20px; border: 1px solid #eee; border-radius: 10px; text-decoration: none; color: inherit; transition: 0.3s;" onmouseover="this.style.borderColor='var(--primary-blue)'" onmouseout="this.style.borderColor='#eee'">
-                    <h4 style="margin-bottom: 5px; color: var(--primary-blue);">Обновить контакты</h4>
-                    <p style="font-size: 0.85rem; color: #777;">Телефон, Email, Адрес и координаты карты.</p>
-                </a>
-            </div>
-
             <h3 style="margin: 40px 0 20px;">Новые расчеты из Квиза</h3>
-<div style="background: white; border-radius: 15px; border: 1px solid #eee; overflow: hidden;">
-    <table style="width: 100%; border-collapse: collapse;">
-        <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
-            <th style="padding: 15px; text-align: left;">Клиент</th>
-            <th style="padding: 15px; text-align: left;">Объект</th>
-            <th style="padding: 15px; text-align: left;">Сумма</th>
-            <th style="padding: 15px; text-align: right;">Дата</th>
-        </tr>
-        <% recentQuiz.forEach(q => { %>
-            <tr style="border-bottom: 1px solid #f1f1f1;">
-                <td style="padding: 15px;">
-                    <strong><%= q.full_name %></strong><br>
-                    <small><%= q.phone %></small>
-                </td>
-                <td style="padding: 15px;"><%= q.building_type %>, <%= q.area %> м²</td>
-                <td style="padding: 15px; color: var(--primary-blue); font-weight: bold;"><%= q.estimated_price.toLocaleString() %> р.</td>
-                <td style="padding: 15px; text-align: right; color: #888;"><%= new Date(q.created_at).toLocaleDateString() %></td>
-            </tr>
-        <% }) %>
-    </table>
-</div>
+            <div style="background: white; border-radius: 15px; border: 1px solid #eee; overflow: hidden;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #eee;">
+                        <th style="padding: 15px; text-align: left;">Клиент</th>
+                        <th style="padding: 15px; text-align: left;">Объект</th>
+                        <th style="padding: 15px; text-align: left;">Сумма</th>
+                        <th style="padding: 15px; text-align: right;">Дата</th>
+                    </tr>
+                    <% if (recentQuiz && recentQuiz.length > 0) { %>
+                        <% recentQuiz.forEach(q => { %>
+                            <tr style="border-bottom: 1px solid #f1f1f1;">
+                                <td style="padding: 15px;">
+                                    <strong><%= q.full_name %></strong><br>
+                                    <small><%= q.phone %></small>
+                                </td>
+                                <td style="padding: 15px;"><%= q.building_type %>, <%= q.area %> м²</td>
+                                <td style="padding: 15px; color: var(--primary-blue); font-weight: bold;"><%= q.estimated_price.toLocaleString() %> р.</td>
+                                <td style="padding: 15px; text-align: right; color: #888;"><%= new Date(q.created_at).toLocaleDateString('ru-RU') %></td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4" style="padding: 30px; text-align: center; color: #999;">Новых расчетов пока нет</td>
+                        </tr>
+                    <% } %>
+                </table>
+            </div>
         </div>
     </section>
 </main>

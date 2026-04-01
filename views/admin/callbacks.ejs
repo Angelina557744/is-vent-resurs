@@ -1,0 +1,77 @@
+<%- include('../partials/header') %>
+
+<main class="container" style="margin-top: 40px; display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+    
+    <aside style="background: var(--black); color: white; padding: 20px; border-radius: 10px; height: fit-content; min-height: 400px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px; font-size: 1.2rem;">Админ-панель</h3>
+        <nav style="display: flex; flex-direction: column; gap: 15px;">
+            <a href="/admin" style="color: white; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="layout-dashboard" size="18"></i> Главная</a>
+            <a href="/admin/home" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="home" size="18"></i> Контент Главной</a>
+            <a href="/admin/services" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="settings" size="18"></i> Услуги</a>
+            <a href="/admin/callbacks" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone-call" size="18"></i> Заявки на звонок</a>
+            <a href="/admin/projects" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="briefcase" size="18"></i> Наши работы</a>
+            <a href="/admin/contacts" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone" size="18"></i> Контакты</a>
+            <a href="/admin/content" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="file-text" size="18"></i> Тексты сайта</a>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <a href="/" style="color: #ffb3b3; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="external-link" size="18"></i> На сайт</a>
+        </nav>
+    </aside>
+
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Заявки на обратный звонок</h2>
+            <span style="background: var(--primary-blue); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.8rem;">
+                Всего: <%= callbacks.length %>
+            </span>
+        </div>
+        
+        <hr style="margin-bottom: 25px; border: 0; border-top: 1px solid #eee;">
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; background: #f9f9f9; border-bottom: 2px solid #eee;">
+                    <th style="padding: 15px; font-size: 0.9rem; color: #666;">Дата</th>
+                    <th style="padding: 15px; font-size: 0.9rem; color: #666;">Имя</th>
+                    <th style="padding: 15px; font-size: 0.9rem; color: #666;">Телефон</th>
+                    <th style="padding: 15px; font-size: 0.9rem; color: #666;">Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (callbacks.length > 0) { %>
+                    <% callbacks.forEach(item => { %>
+                        <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#fcfcfc'" onmouseout="this.style.background='transparent'">
+                            <td style="padding: 15px; font-size: 0.85rem; color: #888;">
+                                <%= new Date(item.created_at).toLocaleString('ru-RU') %>
+                            </td>
+                            <td style="padding: 15px; font-weight: 600;"><%= item.name %></td>
+                            <td style="padding: 15px;">
+                                <a href="tel:<%= item.phone %>" style="color: var(--primary-blue); text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                                    <i data-lucide="phone" size="14"></i> <%= item.phone %>
+                                </a>
+                            </td>
+<td style="padding: 15px;">
+    <form action="/admin/callbacks/update-status/<%= item.id %>" method="POST" style="display: inline-block;">
+        <select name="status" onchange="this.form.submit()" 
+            style="padding: 6px 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            background-color: <%= item.status === 'completed' ? '#e8f5e9' : (item.status === 'process' ? '#fff3e0' : '#f5f5f5') %>;
+            color: <%= item.status === 'completed' ? '#2e7d32' : (item.status === 'process' ? '#ef6c00' : '#666') %>;">
+            
+            <option value="new" <%= item.status === 'new' ? 'selected' : '' %>>Новая</option>
+            <option value="process" <%= item.status === 'process' ? 'selected' : '' %>>В работе</option>
+            <option value="completed" <%= item.status === 'completed' ? 'selected' : '' %>>Завершена</option>
+        </select>
+    </form>
+</td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr>
+                        <td colspan="4" style="padding: 40px; text-align: center; color: #999;">Новых заявок пока нет</td>
+                    </tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<%- include('../partials/footer') %>
