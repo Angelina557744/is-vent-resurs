@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<main class="container" style="margin-top: 40px; display: grid; grid-template-columns: 250px 1fr; gap: 30px;">
+    
+    <aside style="background: var(--black); color: white; padding: 20px; border-radius: 10px; height: fit-content; min-height: 400px;">
+        <h3 style="color: var(--primary-blue); margin-bottom: 20px; font-size: 1.2rem;">Админ-панель</h3>
+        <nav style="display: flex; flex-direction: column; gap: 15px;">
+            <a href="/admin" style="color: white; font-weight: bold; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="layout-dashboard" size="18"></i> Главная</a>
+            <a href="/admin/home" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="home" size="18"></i> Контент Главной</a>
+            <a href="/admin/services" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="settings" size="18"></i> Услуги</a>
+            <a href="/admin/callbacks" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone-call" size="18"></i> Заявки на звонок</a>
+            <a href="/admin/messages" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="mail"></i> Вопросы</a>
+            <a href="/admin/projects" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="briefcase" size="18"></i> Наши работы</a>
+            <a href="/admin/contacts" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="phone" size="18"></i> Контакты</a>
+            <a href="/admin/content" style="color: #ccc; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="file-text" size="18"></i> Тексты сайта</a>
+            <hr style="border: 0; border-top: 1px solid #444; margin: 10px 0;">
+            <a href="/" style="color: #ffb3b3; text-decoration: none; display: flex; align-items: center; gap: 10px;"><i data-lucide="external-link" size="18"></i> На сайт</a>
+        </nav>
+    </aside>
+
+    <section style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        <h2 style="margin-bottom: 20px;">Вопросы с сайта</h2>
+
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: #f9f9f9; border-bottom: 2px solid #eee; text-align: left;">
+                    <th style="padding: 15px;">Отправитель</th>
+                    <th style="padding: 15px;">Сообщение</th>
+                    <th style="padding: 15px;">Статус</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (messages.length > 0) { %>
+                    <% messages.forEach(msg => { %>
+                        <tr style="border-bottom: 1px solid #eee;">
+                            <td style="padding: 15px;">
+                                <strong><%= msg.name %></strong><br>
+                                <small><%= msg.phone %></small><br>
+                                <small style="color: var(--primary-blue);"><%= msg.email %></small><br>
+                                <small style="color: #999;"><%= new Date(msg.created_at).toLocaleString('ru-RU') %></small>
+                            </td>
+                            <td style="padding: 15px; font-size: 0.9rem; color: #444; max-width: 350px; line-height: 1.4;">
+                                <%= msg.message %>
+                            </td>
+                            <td style="padding: 15px;">
+                            <p><strong>Вопрос:</strong> <%= msg.message %></p>
+                               <form action="/admin/messages/answer/<%= msg.id %>" method="POST" style="margin-top: 10px;">
+        <textarea name="admin_answer" placeholder="Ваш ответ пользователю..." required 
+                  style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 0.9rem;"><%= msg.admin_answer || '' %></textarea>
+        <button type="submit" class="btn btn-blue" style="margin-top: 5px; padding: 5px 15px; font-size: 0.8rem;">
+            <%= msg.admin_answer ? 'Обновить ответ' : 'Отправить ответ в ЛК' %>
+        </button>
+    </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } else { %>
+                    <tr><td colspan="3" style="padding: 40px; text-align: center; color: #999;">Сообщений пока нет</td></tr>
+                <% } %>
+            </tbody>
+        </table>
+    </section>
+</main>
+
+<%- include('../partials/footer') %>

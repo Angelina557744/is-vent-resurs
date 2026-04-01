@@ -169,10 +169,30 @@ app.get('/logout', (req, res) => {
 
 app.get('/profile', isAuth, async (req, res) => {
     try {
-        const [quizResults] = await db.query('SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC', [req.session.user.id]);
-        res.render('profile', { title: 'Личный кабинет', quizResults });
+        const userId = req.session.user.id;
+        // Нам нужно знать email пользователя из БД, чтобы найти его вопросы
+        const [[userData]] = await db.query('SELECT email FROM users WHERE id = ?', [userId]);
+
+        const [quizResults] = await db.query(
+            'SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC', 
+            [userId]
+        );
+
+        // Ищем вопросы из формы контактов, где email совпадает с email пользователя
+        const [userMessages] = await db.query(
+            'SELECT * FROM contact_messages WHERE email = ? AND admin_answer IS NOT NULL ORDER BY created_at DESC',
+            [userData.email]
+        );
+
+        res.render('profile', { 
+            title: 'Личный кабинет | ВентРесурс',
+            user: req.session.user,
+            quizResults: quizResults,
+            notifications: userMessages // Передаем ответы как уведомления
+        });
     } catch (err) {
-        res.status(500).send('Ошибка профиля');
+        console.error(err);
+        res.status(500).send('Ошибка при загрузке профиля');
     }
 });
 
@@ -370,6 +390,64 @@ app.post('/admin/callbacks/update-status/:id', isAdmin, async (req, res) => {
     } catch (error) {
         console.error('Ошибка обновления статуса:', error);
         res.status(500).send('Ошибка сервера при обновлении статуса');
+    }
+});
+
+
+app.post('/api/contact-message', async (req, res) => {
+    const { name, email, phone, message } = req.body;
+    try {
+        await db.query(
+            'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
+            [name, email, phone, message]
+        );
+        res.status(200).json({ success: true, message: 'Сообщение успешно отправлено!' });
+    } catch (error) {
+        console.error('Ошибка сохранения сообщения:', error);
+        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+    }
+});
+
+// АДМИНКА: ПРОСМОТР СООБЩЕНИЙ (ВОПРОСОВ)
+app.get('/admin/messages', isAdmin, async (req, res) => {
+    try {
+        const [messages] = await db.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
+        res.render('admin/messages', { 
+            title: 'Вопросы пользователей | Админ',
+            messages: messages || [] 
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка загрузки сообщений');
+    }
+});
+
+// АДМИНКА: ОБНОВЛЕНИЕ СТАТУСА СООБЩЕНИЯ
+app.post('/admin/messages/update-status/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+        await db.query('UPDATE contact_messages SET status = ? WHERE id = ?', [status, id]);
+        res.redirect('/admin/messages');
+    } catch (error) {
+        res.status(500).send('Ошибка при обновлении статуса');
+    }
+});
+
+// Маршрут для сохранения ответа администратора
+app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { admin_answer } = req.body;
+    try {
+        // Сохраняем ответ и автоматически меняем статус на "completed" (обработано)
+        await db.query(
+            'UPDATE contact_messages SET admin_answer = ?, status = "completed" WHERE id = ?', 
+            [admin_answer, id]
+        );
+        res.redirect('/admin/messages?success=answer');
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Ошибка при сохранении ответа');
     }
 });
 
