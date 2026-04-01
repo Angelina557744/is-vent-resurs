@@ -169,9 +169,12 @@ app.get('/logout', (req, res) => {
 
 app.get('/profile', isAuth, async (req, res) => {
     try {
-        const userId = req.session.user.id;
-        // Нам нужно знать email пользователя из БД, чтобы найти его вопросы
+const userId = req.session.user.id;
         const [[userData]] = await db.query('SELECT email FROM users WHERE id = ?', [userId]);
+
+        if (!userData) {
+             return res.redirect('/logout'); // Или обработка ошибки
+        }
 
         const [quizResults] = await db.query(
             'SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC', 
@@ -225,23 +228,37 @@ app.post('/callback', async (req, res) => {
 
 app.get('/admin', isAdmin, async (req, res) => {
     try {
-        const [[uCount]] = await db.query('SELECT COUNT(*) as count FROM users');
-        const [[pCount]] = await db.query('SELECT COUNT(*) as count FROM projects');
-        const [[sCount]] = await db.query('SELECT COUNT(*) as count FROM services');
-        const [[cCount]] = await db.query('SELECT COUNT(*) as count FROM callbacks');
-        
-        const [recentQuiz] = await db.query(`
-            SELECT qr.*, u.full_name, u.phone FROM quiz_results qr 
-            JOIN users u ON qr.user_id = u.id ORDER BY qr.created_at DESC LIMIT 5
-        `).catch(() => [[]]);
+        // Безопасное получение счетчиков
+        const [sRes] = await db.query('SELECT COUNT(*) as count FROM services');
+        const [cRes] = await db.query('SELECT COUNT(*) as count FROM callbacks');
+        const [pRes] = await db.query('SELECT COUNT(*) as count FROM projects');
+        const [uRes] = await db.query('SELECT COUNT(*) as count FROM users');
+        const [mRes] = await db.query('SELECT COUNT(*) as count FROM contact_messages');
 
-        res.render('admin/dashboard', { 
-            title: 'Панель управления',
-            stats: { users: uCount.count, projects: pCount.count, services: sCount.count, callbacks: cCount.count },
-            recentQuiz
+        // Безопасный запрос квизов (LEFT JOIN не даст ошибку, если пользователь удален)
+        const [recentQuiz] = await db.query(`
+            SELECT qr.*, u.full_name, u.phone 
+            FROM quiz_results qr 
+            LEFT JOIN users u ON qr.user_id = u.id 
+            ORDER BY qr.created_at DESC LIMIT 5
+        `);
+
+        res.render('admin/dashboard', {
+            title: 'Панель управления | ВентРесурс',
+            user: req.session.user,
+            stats: {
+                services: sRes[0]?.count || 0,
+                callbacks: cRes[0]?.count || 0,
+                projects: pRes[0]?.count || 0,
+                users: uRes[0]?.count || 0,
+                messages: mRes[0]?.count || 0
+            },
+            recentQuiz: recentQuiz || [] // Гарантируем, что это массив
         });
     } catch (err) {
-        res.status(500).send('Ошибка админки');
+        console.error("КРИТИЧЕСКАЯ ОШИБКА АДМИНКИ:", err);
+        // Выводим текст ошибки прямо на экран, чтобы вы поняли, какой таблицы не хватает
+        res.status(500).send(`Ошибка базы данных: ${err.message}`);
     }
 });
 
@@ -393,7 +410,6 @@ app.post('/admin/callbacks/update-status/:id', isAdmin, async (req, res) => {
     }
 });
 
-
 app.post('/api/contact-message', async (req, res) => {
     const { name, email, phone, message } = req.body;
     try {
@@ -401,10 +417,10 @@ app.post('/api/contact-message', async (req, res) => {
             'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
             [name, email, phone, message]
         );
-        res.status(200).json({ success: true, message: 'Сообщение успешно отправлено!' });
+        // Вместо res.json — возвращаем на страницу контактов с параметром успеха
+        res.redirect('/contacts?success=1'); 
     } catch (error) {
-        console.error('Ошибка сохранения сообщения:', error);
-        res.status(500).json({ success: false, message: 'Ошибка сервера' });
+        res.redirect('/contacts?error=1');
     }
 });
 

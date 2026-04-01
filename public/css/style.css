@@ -9,6 +9,10 @@
     --transition: all 0.3s ease;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
 @font-face {
     font-family: 'CascadiaCode';
     src: url('/public/fonts/CascadiaCodePL-Regular.otf') format('opentype');
