@@ -1,93 +1,791 @@
 <%- include('partials/header') %>
 
-<main class="container" style="margin-top: 50px;">
-    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
-        <h1>Личный кабинет</h1>
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+<main class="profile-main">
+    <div class="profile-container">
         
-        <div style="display: grid; grid-template-columns: 200px 1fr; gap: 20px;">
-            <div style="background: var(--light-gray); padding: 20px; border-radius: 8px; text-align: center;">
-                <i data-lucide="user-circle" size="64" style="color: var(--primary-blue);"></i>
-                <h3 style="margin-top: 10px;"><%= user.full_name %></h3>
-                <span style="display: inline-block; background: var(--primary-blue); color: white; padding: 2px 10px; border-radius: 20px; font-size: 0.8rem; margin-top: 5px;">
+        <!-- Заголовок по центру -->
+        <div class="profile-header">
+            <h1 class="profile-title">Личный кабинет</h1>
+            <div class="profile-title-underline"></div>
+        </div>
+
+        <!-- Основная сетка: слева информация, справа проекты -->
+        <div class="profile-grid">
+            
+            <!-- ЛЕВАЯ КОЛОНКА - ИНФОРМАЦИЯ ПОЛЬЗОВАТЕЛЯ -->
+            <div class="profile-info-card">
+                <div class="profile-avatar">
+                    <i data-lucide="user-circle" class="profile-avatar-icon"></i>
+                </div>
+                <h2 class="profile-name"><%= user.full_name %></h2>
+                <span class="profile-badge <%= user.role === 'admin' ? 'profile-badge-admin' : 'profile-badge-user' %>">
                     <%= user.role === 'admin' ? 'Администратор' : 'Клиент' %>
                 </span>
+                
+                <div class="profile-details">
+                    <div class="profile-detail-item">
+                        <i data-lucide="user" class="profile-detail-icon"></i>
+                        <div>
+                            <span class="profile-detail-label">Логин</span>
+                            <span class="profile-detail-value"><%= user.username %></span>
+                        </div>
+                    </div>
+                    <div class="profile-detail-item">
+                        <i data-lucide="mail" class="profile-detail-icon"></i>
+                        <div>
+                            <span class="profile-detail-label">Email</span>
+                            <span class="profile-detail-value"><%= user.email %></span>
+                        </div>
+                    </div>
+                    <div class="profile-detail-item">
+                        <i data-lucide="key" class="profile-detail-icon"></i>
+                        <div>
+                            <span class="profile-detail-label">Пароль</span>
+                            <span class="profile-detail-value">••••••••</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ПРАВАЯ КОЛОНКА - БУДУЩИЕ ПРОЕКТЫ -->
+            <div class="profile-projects-card">
+                <div class="profile-projects-header">
+                    <i data-lucide="briefcase" class="profile-projects-icon"></i>
+                    <h3 class="profile-projects-title">Проекты в работе</h3>
+                </div>
+                <div class="profile-projects-placeholder">
+                    <i data-lucide="clock" class="profile-placeholder-icon"></i>
+                    <p class="profile-placeholder-text">Здесь будут отображаться ваши активные проекты</p>
+                    <p class="profile-placeholder-subtext">Как только начнется монтаж вашей системы, информация появится здесь</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК КВИЗА ПО ЦЕНТРУ -->
+        <div class="profile-quiz-card">
+            <div class="profile-quiz-content">
+                <div class="profile-quiz-text">
+                    <div class="profile-quiz-icon-wrapper">
+                        <i data-lucide="calculator" class="profile-quiz-icon"></i>
+                    </div>
+                    <h3 class="profile-quiz-title">Инженерный калькулятор ВентРесурс</h3>
+                    <p class="profile-quiz-description">
+                        Быстрый подбор системы вентиляции и кондиционирования. Ответьте на 5 простых вопросов о вашем объекте, и наш ИИ рассчитает ориентировочную стоимость и даст профессиональную рекомендацию.
+                    </p>
+                    <a href="/profile/quiz" class="profile-quiz-button">
+                        Начать расчет
+                        <i data-lucide="chevron-right" class="profile-quiz-button-icon"></i>
+                    </a>
+                </div>
+                <div class="profile-quiz-illustration hide-mobile">
+                    <i data-lucide="wind" class="profile-quiz-wind-icon"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- БЛОК С РАСЧЕТАМИ ПОЛЬЗОВАТЕЛЯ -->
+        <div class="profile-calculations-card">
+            <div class="profile-calculations-header">
+                <i data-lucide="file-text" class="profile-calculations-icon"></i>
+                <h3 class="profile-calculations-title">Ваши расчеты</h3>
+                <span class="profile-calculations-count"><%= typeof quizResults !== 'undefined' ? quizResults.length : 0 %></span>
             </div>
             
-            <div>
-                <h3>Мои проекты</h3>
-                <p style="color: var(--text-gray); margin-top: 10px;">У вас пока нет активных проектов.</p>
-                </div>
+            <div class="profile-calculations-list">
+                <% if (typeof quizResults !== 'undefined' && quizResults.length > 0) { %>
+                    <% quizResults.forEach(result => { %>
+                        <div class="profile-calculation-item">
+                            <div class="profile-calculation-header">
+                                <div class="profile-calculation-type">
+                                    <i data-lucide="settings-2" class="profile-calculation-type-icon"></i>
+                                    <strong><%= result.building_type %></strong>
+                                </div>
+                                <div class="profile-calculation-price">
+                                    <%= result.estimated_price.toLocaleString() %> ₽
+                                </div>
+                            </div>
+                            <div class="profile-calculation-params">
+                                <span class="profile-calculation-param">
+                                    <i data-lucide="move-3d" class="profile-param-icon"></i>
+                                    Площадь: <%= result.area %> м²
+                                </span>
+                                <span class="profile-calculation-param">
+                                    <i data-lucide="users" class="profile-param-icon"></i>
+                                    Людей: <%= result.people_count %>
+                                </span>
+                                <% if (result.budget_range) { %>
+                                    <span class="profile-calculation-param">
+                                        <i data-lucide="wallet" class="profile-param-icon"></i>
+                                        Бюджет: <%= result.budget_range %>
+                                    </span>
+                                <% } %>
+                            </div>
+                            <div class="profile-calculation-date">
+                                <i data-lucide="calendar" class="profile-date-icon"></i>
+                                <%= new Date(result.created_at).toLocaleDateString('ru-RU') %>
+                            </div>
+                            <% if (result.ai_recommendation) { %>
+                                <div class="profile-calculation-ai">
+                                    <div class="profile-ai-header">
+                                        <i data-lucide="cpu" class="profile-ai-icon"></i>
+                                        <span class="profile-ai-label">Заключение ИИ</span>
+                                    </div>
+                                    <p class="profile-ai-text"><%= result.ai_recommendation %></p>
+                                </div>
+                            <% } %>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="profile-empty-state">
+                        <i data-lucide="calculator" class="profile-empty-icon"></i>
+                        <p class="profile-empty-text">Вы еще не делали расчетов</p>
+                        <p class="profile-empty-subtext">Пройдите инженерный калькулятор, чтобы получить предварительную стоимость системы</p>
+                        <a href="/profile/quiz" class="profile-empty-button">Пройти калькулятор</a>
+                    </div>
+                <% } %>
+            </div>
         </div>
+
+        <!-- УВЕДОМЛЕНИЯ (ОТВЕТЫ АДМИНА) -->
+        <% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
+            <div class="profile-notifications-card">
+                <div class="profile-notifications-header">
+                    <i data-lucide="bell" class="profile-notifications-icon"></i>
+                    <h3 class="profile-notifications-title">Ответы на ваши вопросы</h3>
+                </div>
+                <div class="profile-notifications-list">
+                    <% notifications.forEach(note => { %>
+                        <div class="profile-notification-item">
+                            <div class="profile-notification-date">
+                                <i data-lucide="calendar" class="profile-notif-date-icon"></i>
+                                <%= new Date(note.created_at).toLocaleDateString('ru-RU') %>
+                            </div>
+                            <div class="profile-notification-question">
+                                <i data-lucide="message-circle" class="profile-notif-question-icon"></i>
+                                <p><%= note.message %></p>
+                            </div>
+                            <div class="profile-notification-answer">
+                                <i data-lucide="corner-down-right" class="profile-notif-answer-icon"></i>
+                                <div>
+                                    <span class="profile-notif-answer-label">Ответ администратора:</span>
+                                    <p class="profile-notif-answer-text"><%= note.admin_answer %></p>
+                                </div>
+                            </div>
+                        </div>
+                    <% }) %>
+                </div>
+            </div>
+        <% } %>
+
     </div>
 </main>
 
-<div style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); padding: 30px; border-radius: 20px; border: 1px solid #d0e3ff; margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; gap: 20px;">
-    <div style="flex: 1;">
-        <h3 style="color: var(--primary-blue); margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-            <i data-lucide="calculator"></i> Подбор системы онлайн
-        </h3>
-        <p style="color: #555; font-size: 0.95rem; line-height: 1.5;">
-            Ответьте на 4 вопроса о вашем объекте, и мы рассчитаем ориентировочную стоимость системы вентиляции и кондиционирования за 1 минуту.
-        </p>
-        <a href="/profile/quiz" class="btn btn-blue" style="margin-top: 15px; display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
-            Начать расчет <i data-lucide="chevron-right" size="18"></i>
-        </a>
-    </div>
-    <div style="flex-shrink: 0; opacity: 0.8;" class="hide-mobile">
-        <i data-lucide="wind" style="width: 80px; height: 80px; color: var(--primary-blue);"></i>
-    </div>
-</div>
+<style>/* Основной контейнер */
+.profile-main {
+    margin-top: 50px;
+    margin-bottom: 50px;
+}
 
-<% if (typeof quizResults !== 'undefined' && quizResults.length > 0) { %>
-    <div style="margin-top: 40px;">
-        <h3 style="margin-bottom: 20px;">Ваши расчеты</h3>
-        <div style="display: grid; gap: 15px;">
-            <% quizResults.forEach(result => { %>
-                <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <div style="font-weight: bold; font-size: 1.1rem;"><%= result.building_type %> (<%= result.area %> м²)</div>
-                        <div style="color: #888; font-size: 0.85rem;">Дата расчета: <%= new Date(result.created_at).toLocaleDateString() %></div>
-                    </div>
-                    <div style="text-align: right;">
-                        <div style="color: var(--primary-blue); font-weight: bold; font-size: 1.2rem;"><%= result.estimated_price.toLocaleString() %> руб.</div>
-                        <div style="font-size: 0.8rem; color: #28a745;">Статус: Передано инженеру</div>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-    </div>
-<% } %>
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
 
-<% if (typeof notifications !== 'undefined' && notifications.length > 0) { %>
-    <div style="margin-top: 30px; margin-bottom: 30px;">
-        <h3 style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-            <i data-lucide="bell" style="color: var(--primary-blue);"></i> Ответы на ваши вопросы
-        </h3>
-        
-        <div style="display: grid; gap: 15px;">
-            <% notifications.forEach(note => { %>
-                <div style="background: #f0f7ff; border-left: 5px solid var(--primary-blue); padding: 20px; border-radius: 10px;">
-                    <div style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">
-                        Запрос от <%= new Date(note.created_at).toLocaleDateString() %>
-                    </div>
-                    <p style="font-style: italic; color: #444; margin-bottom: 10px;">"<%= note.message %>"</p>
-                    <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #d0e3ff;">
-                        <strong style="color: var(--primary-blue); font-size: 0.9rem;">Ответ администратора:</strong>
-                        <p style="margin-top: 5px; line-height: 1.5;"><%= note.admin_answer %></p>
-                    </div>
-                </div>
-            <% }) %>
-        </div>
-    </div>
-<% } %>
+/* Заголовок по центру */
+.profile-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
 
+.profile-title {
+    font-size: 2rem;
+    color: var(--black);
+    margin: 0;
+    font-weight: 600;
+}
 
-<style>
-    @media (max-width: 600px) {
-        .hide-mobile { display: none; }
+.profile-title-underline {
+    width: 60px;
+    height: 3px;
+    background: var(--primary-blue);
+    margin: 12px auto 0;
+    border-radius: 2px;
+}
+
+/* Сетка 2 колонки */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+/* Левая карточка - информация */
+.profile-info-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.profile-avatar {
+    margin-bottom: 20px;
+}
+
+.profile-avatar-icon {
+    width: 80px;
+    height: 80px;
+    color: var(--primary-blue);
+}
+
+.profile-name {
+    font-size: 1.5rem;
+    color: var(--black);
+    margin: 0 0 8px 0;
+    font-weight: 600;
+}
+
+.profile-badge {
+    display: inline-block;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+}
+
+.profile-badge-user {
+    background: #e3f2fd;
+    color: var(--primary-blue);
+}
+
+.profile-badge-admin {
+    background: #dc3545;
+    color: var(--white);
+}
+
+.profile-details {
+    text-align: left;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.profile-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+}
+
+.profile-detail-item:last-child {
+    border-bottom: none;
+}
+
+.profile-detail-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--primary-blue);
+}
+
+.profile-detail-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-detail-value {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--black);
+    font-weight: 500;
+}
+
+/* Правая карточка - проекты */
+.profile-projects-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.profile-projects-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f7ff;
+}
+
+.profile-projects-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-blue);
+}
+
+.profile-projects-title {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--black);
+}
+
+.profile-projects-placeholder {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.profile-placeholder-icon {
+    width: 50px;
+    height: 50px;
+    color: #ccc;
+    margin-bottom: 15px;
+}
+
+.profile-placeholder-text {
+    color: #999;
+    font-size: 0.9rem;
+    margin: 0 0 5px 0;
+}
+
+.profile-placeholder-subtext {
+    color: #bbb;
+    font-size: 0.8rem;
+    margin: 0;
+}
+
+/* Карточка квиза по центру */
+.profile-quiz-card {
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+    border-radius: 24px;
+    border: 1px solid #d0e3ff;
+    margin-bottom: 40px;
+    overflow: hidden;
+}
+
+.profile-quiz-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 30px;
+    gap: 30px;
+}
+
+.profile-quiz-text {
+    flex: 1;
+}
+
+.profile-quiz-icon-wrapper {
+    display: inline-flex;
+    background: var(--primary-blue);
+    padding: 10px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+}
+
+.profile-quiz-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--white);
+}
+
+.profile-quiz-title {
+    font-size: 1.4rem;
+    color: var(--primary-blue);
+    margin: 0 0 10px 0;
+}
+
+.profile-quiz-description {
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.profile-quiz-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--primary-blue);
+    color: var(--white);
+    padding: 12px 28px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: var(--transition);
+}
+
+.profile-quiz-button:hover {
+    background: var(--dark-blue);
+    transform: translateX(5px);
+}
+
+.profile-quiz-button-icon {
+    width: 18px;
+    height: 18px;
+}
+
+.profile-quiz-illustration {
+    flex-shrink: 0;
+}
+
+.profile-quiz-wind-icon {
+    width: 100px;
+    height: 100px;
+    color: var(--primary-blue);
+    opacity: 0.8;
+}
+
+/* Карточка расчетов */
+.profile-calculations-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+    margin-bottom: 40px;
+}
+
+.profile-calculations-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f7ff;
+}
+
+.profile-calculations-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-blue);
+}
+
+.profile-calculations-title {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--black);
+}
+
+.profile-calculations-count {
+    background: var(--primary-blue);
+    color: var(--white);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 20px;
+    margin-left: auto;
+}
+
+.profile-calculations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-calculation-item {
+    border: 1px solid #eee;
+    border-radius: 16px;
+    padding: 20px;
+    transition: var(--transition);
+}
+
+.profile-calculation-item:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+}
+
+.profile-calculation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.profile-calculation-type {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.profile-calculation-type-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-blue);
+}
+
+.profile-calculation-price {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--primary-blue);
+}
+
+.profile-calculation-params {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 12px;
+}
+
+.profile-calculation-param {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.profile-param-icon {
+    width: 14px;
+    height: 14px;
+    color: #999;
+}
+
+.profile-calculation-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #999;
+    margin-bottom: 15px;
+}
+
+.profile-date-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.profile-calculation-ai {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 15px;
+    margin-top: 10px;
+    border-left: 3px solid var(--primary-blue);
+}
+
+.profile-ai-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.profile-ai-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--primary-blue);
+}
+
+.profile-ai-label {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--primary-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-ai-text {
+    font-size: 0.85rem;
+    color: #444;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Пустое состояние */
+.profile-empty-state {
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.profile-empty-icon {
+    width: 60px;
+    height: 60px;
+    color: #ddd;
+    margin-bottom: 15px;
+}
+
+.profile-empty-text {
+    font-size: 1rem;
+    color: #999;
+    margin: 0 0 5px 0;
+}
+
+.profile-empty-subtext {
+    font-size: 0.85rem;
+    color: #bbb;
+    margin: 0 0 20px 0;
+}
+
+.profile-empty-button {
+    display: inline-block;
+    background: var(--primary-blue);
+    color: var(--white);
+    padding: 10px 24px;
+    border-radius: 30px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: var(--transition);
+}
+
+.profile-empty-button:hover {
+    background: var(--dark-blue);
+}
+
+/* Уведомления */
+.profile-notifications-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    border: 1px solid #eee;
+}
+
+.profile-notifications-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f7ff;
+}
+
+.profile-notifications-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--primary-blue);
+}
+
+.profile-notifications-title {
+    font-size: 1.2rem;
+    margin: 0;
+    color: var(--black);
+}
+
+.profile-notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-notification-item {
+    background: #f0f7ff;
+    border-radius: 16px;
+    padding: 20px;
+}
+
+.profile-notification-date {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #888;
+    margin-bottom: 12px;
+}
+
+.profile-notif-date-icon {
+    width: 12px;
+    height: 12px;
+}
+
+.profile-notification-question {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.profile-notif-question-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.profile-notification-question p {
+    margin: 0;
+    font-style: italic;
+    color: #444;
+    font-size: 0.9rem;
+}
+
+.profile-notification-answer {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--white);
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.profile-notif-answer-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+}
+
+.profile-notif-answer-label {
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: var(--primary-blue);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-notif-answer-text {
+    margin: 5px 0 0 0;
+    font-size: 0.85rem;
+    color: #333;
+    line-height: 1.5;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
     }
-</style>
+    
+    .profile-quiz-content {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-quiz-button {
+        justify-content: center;
+    }
+    
+    .profile-calculation-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .profile-calculation-params {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .hide-mobile {
+        display: none;
+    }
+}</style>
+
+
+<script>
+    // Инициализация иконок Lucide
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
 
 <%- include('partials/footer') %>
-

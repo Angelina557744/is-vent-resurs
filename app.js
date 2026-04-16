@@ -3,6 +3,8 @@ const path = require('path');
 const dotenv = require('dotenv');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
+const axios = require('axios');
+
 
 dotenv.config();
 
@@ -203,15 +205,236 @@ app.get('/profile/quiz', isAuth, (req, res) => {
     res.render('quiz', { title: 'Подбор системы вентиляции' });
 });
 
-app.post('/api/quiz-save', isAuth, async (req, res) => {
-    const { building_type, area, people_count, budget_range, estimated_price } = req.body;
+
+
+// Отключаем проверку SSL для GigaChat (временно)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// Функция для получения токена GigaChat
+async function getGigaChatToken() {
     try {
-        await db.query('INSERT INTO quiz_results (user_id, building_type, area, people_count, budget_range, estimated_price) VALUES (?, ?, ?, ?, ?, ?)',
-            [req.session.user.id, building_type, area, people_count, budget_range, estimated_price]);
-        res.json({ success: true });
+        const response = await axios.post(
+            'https://ngw.devices.sberbank.ru:9443/api/v2/oauth',
+            'scope=GIGACHAT_API_PERS',
+            {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
+                    'RqUID': require('crypto').randomUUID(),
+                    'Authorization': `Basic ${process.env.GIGACHAT_AUTH_KEY}`
+                },
+                httpsAgent: new (require('https').Agent)({  
+                    rejectUnauthorized: false
+                })
+            }
+        );
+        
+        console.log('✅ Токен GigaChat получен');
+        return response.data.access_token;
     } catch (err) {
-        res.status(500).json({ success: false });
+        console.error('❌ Ошибка получения токена GigaChat:');
+        if (err.response) {
+            console.error('Статус:', err.response.status);
+            console.error('Данные:', err.response.data);
+        } else {
+            console.error('Ошибка:', err.message);
+        }
+        throw err;
     }
+}
+
+
+// Функция для классификации сообщения через GigaChat
+async function classifyMessageWithGigaChat(message) {
+    const https = require('https');
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    
+    const prompt = `Классифицируй вопрос пользователя в одну из категорий:
+- Ремонт (вопросы о ремонте вентиляции, замене оборудования)
+- Проектирование (вопросы о расчетах, проектной документации)
+- Сотрудничество (вопросы о партнерстве, дилерстве)
+- Цена (вопросы о стоимости, смете, оплате)
+- Общее (не подходит ни под одну категорию)
+
+Вопрос: "${message.substring(0, 500)}"
+
+Ответь ТОЛЬКО названием категории (одним словом из списка: Ремонт, Проектирование, Сотрудничество, Цена, Общее).`;
+
+    try {
+        console.log('🔄 Отправляем запрос на классификацию в GigaChat...');
+        
+        const token = await getGigaChatToken();
+        
+        const response = await axios.post(
+            'https://gigachat.devices.sberbank.ru/api/v1/chat/completions',
+            {
+                model: "GigaChat",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Ты классификатор сообщений. Отвечай только названием категории: Ремонт, Проектирование, Сотрудничество, Цена, Общее. Никаких других слов и знаков препинания."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.1,
+                max_tokens: 20,
+                stream: false,
+                update_interval: 0
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                timeout: 10000,
+                httpsAgent: agent
+            }
+        );
+        
+        let category = response.data.choices[0].message.content.trim();
+        
+        // Валидация категории
+        const validCategories = ['Ремонт', 'Проектирование', 'Сотрудничество', 'Цена', 'Общее'];
+        if (!validCategories.includes(category)) {
+            console.log(`⚠️ Нераспознанная категория: ${category}, устанавливаем 'Общее'`);
+            category = 'Общее';
+        }
+        
+        console.log(`✅ Классификация успешна: ${category}`);
+        return category;
+        
+    } catch (err) {
+        console.error('❌ Ошибка классификации через GigaChat:');
+        if (err.response) {
+            console.error('Статус:', err.response.status);
+            console.error('Данные:', JSON.stringify(err.response.data, null, 2));
+        } else {
+            console.error('Ошибка:', err.message);
+        }
+        return 'Общее';
+    }
+}
+
+
+app.post('/api/quiz-save', isAuth, async (req, res) => {
+    const https = require('https');
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    
+    const { 
+        building_type, 
+        area, 
+        people_count, 
+        budget_range, 
+        industry,
+        ceiling_height,
+        automation 
+    } = req.body;
+    
+    const userId = req.session.user.id;
+    
+    // Рассчитываем примерную цену
+    let estimated_price = parseFloat(area) * 5000;
+    if (budget_range === 'Премиум') estimated_price *= 1.5;
+    if (budget_range === 'Стандарт') estimated_price *= 1.2;
+    if (building_type === 'Производство') estimated_price *= 1.3;
+    
+    // Улучшенный промпт
+    const prompt = `Ты профессиональный инженер-консультант компании "ВентРесурс".
+
+Данные клиента после квиза:
+- Объект: ${building_type}
+- Сфера: ${industry || 'не указана'}  
+- Площадь: ${area} м²
+- Высота: ${ceiling_height || '3'} м
+- Людей: ${people_count}
+- Бюджет: ${budget_range}
+- Автоматизация: ${automation === 'yes' ? 'нужна' : 'не нужна'}
+- Цена: ${estimated_price.toLocaleString()} руб.
+
+Напиши клиенту ответ от "ВентРесурс" по схеме:
+1. Приветствие ("Здравствуйте! Спасибо за обращение в ВентРесурс")
+2. Обоснование цены (2-3 фактора, почему так)
+3. Что входит в стоимость
+4. Полезный совет
+5. Предложение связаться
+
+Ответ должен быть теплым, профессиональным, 4-6 предложений. Только русский язык.`;
+
+    let recommendation = `Здравствуйте! Спасибо за обращение в компанию "ВентРесурс"!
+
+Предварительная стоимость системы ${building_type.toLowerCase()} для вашего объекта площадью ${area} м² составляет ${estimated_price.toLocaleString()} рублей.
+
+Эта цена включает: проектирование, оборудование (${budget_range} класс), доставку, монтаж и пусконаладку.
+
+Для получения точного коммерческого предложения, пожалуйста, оставьте заявку на сайте или позвоните нам. Наш инженер свяжется с вами в ближайшее время!
+
+С уважением, команда ВентРесурс.`;
+
+    try {
+        console.log('🔄 Получаем токен GigaChat...');
+        const token = await getGigaChatToken();
+        
+        console.log('🔄 Отправляем запрос к GigaChat...');
+        const response = await axios.post(
+            'https://gigachat.devices.sberbank.ru/api/v1/chat/completions',
+            {
+                model: "GigaChat",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Ты дружелюбный консультант компании ВентРесурс. Отвечай тепло, профессионально, кратко. Используй обращение 'вы'. Всегда предлагай связаться для точного расчета."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.8,
+                max_tokens: 400,
+                stream: false,
+                update_interval: 0
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                timeout: 20000,
+                httpsAgent: agent
+            }
+        );
+        
+        if (response.data && response.data.choices && response.data.choices[0]) {
+            recommendation = response.data.choices[0].message.content;
+            console.log('✅ Ответ получен от GigaChat');
+        }
+        
+    } catch (err) {
+        console.error('❌ ОШИБКА GigaChat, используем стандартный ответ');
+        // recommendation уже содержит запасной вариант
+    }
+    
+    // Сохраняем результат в БД
+    try {
+        await db.query(
+            `INSERT INTO quiz_results 
+            (user_id, building_type, area, people_count, budget_range, estimated_price, ai_recommendation, industry, ceiling_height) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [userId, building_type, area, people_count, budget_range, estimated_price, recommendation, industry || null, ceiling_height || null]
+        );
+        
+        console.log('✅ Результат сохранен в БД');
+        
+    } catch (dbErr) {
+        console.error('❌ Ошибка сохранения в БД:', dbErr);
+    }
+    
+    res.json({ success: true, recommendation: recommendation });
 });
 
 app.post('/callback', async (req, res) => {
@@ -406,15 +629,42 @@ app.post('/admin/callbacks/update-status/:id', isAdmin, async (req, res) => {
     }
 });
 
+// Обработка формы контактов с классификацией через GigaChat
 app.post('/api/contact-message', async (req, res) => {
     const { name, email, phone, message } = req.body;
+    
+    // Валидация обязательных полей
+    if (!name || !email || !message) {
+        console.error('Ошибка: Не все обязательные поля заполнены');
+        return res.redirect('/contacts?error=1');
+    }
+    
+    console.log('--- НОВОЕ СООБЩЕНИЕ ОТ ПОЛЬЗОВАТЕЛЯ ---');
+    console.log(`От: ${name} (${email})`);
+    console.log(`Сообщение: ${message.substring(0, 100)}...`);
+    
+    let category = 'Общее';
+    
+    // Вызываем классификацию через GigaChat
+    try {
+        category = await classifyMessageWithGigaChat(message);
+        console.log(`📊 Категория определена: ${category}`);
+    } catch (err) {
+        console.error('❌ Классификация не удалась, используем категорию по умолчанию');
+        category = 'Общее';
+    }
+    
+    // Сохраняем в базу данных
     try {
         await db.query(
-            'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
-            [name, email, phone, message]
+            'INSERT INTO contact_messages (name, email, phone, message, category, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, email, phone, message, category, 'new']
         );
-        res.redirect('/contacts?success=1'); 
-    } catch (error) {
+        console.log('💾 Сообщение сохранено в базу данных');
+        res.redirect('/contacts?success=1');
+        
+    } catch (dbErr) {
+        console.error('❌ Ошибка сохранения в БД:', dbErr.message);
         res.redirect('/contacts?error=1');
     }
 });
@@ -459,6 +709,8 @@ app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
         res.status(500).send('Ошибка при сохранении ответа');
     }
 });
+
+
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
