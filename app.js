@@ -383,7 +383,6 @@ app.post('/admin/content/update', isAdmin, async (req, res) => {
     }
 });
 
-// Служебный роут
 app.get('/reset-admin-password', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash('adm88@VENT556', 10);
@@ -394,15 +393,12 @@ app.get('/reset-admin-password', async (req, res) => {
     }
 });
 
-// Обработка изменения статуса заявки
 app.post('/admin/callbacks/update-status/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     try {
-        // Обновляем статус в таблице callbacks
         await db.query('UPDATE callbacks SET status = ? WHERE id = ?', [status, id]);
         
-        // После успешного обновления возвращаемся на страницу списка
         res.redirect('/admin/callbacks');
     } catch (error) {
         console.error('Ошибка обновления статуса:', error);
@@ -417,14 +413,12 @@ app.post('/api/contact-message', async (req, res) => {
             'INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)',
             [name, email, phone, message]
         );
-        // Вместо res.json — возвращаем на страницу контактов с параметром успеха
         res.redirect('/contacts?success=1'); 
     } catch (error) {
         res.redirect('/contacts?error=1');
     }
 });
 
-// АДМИНКА: ПРОСМОТР СООБЩЕНИЙ (ВОПРОСОВ)
 app.get('/admin/messages', isAdmin, async (req, res) => {
     try {
         const [messages] = await db.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
@@ -438,7 +432,6 @@ app.get('/admin/messages', isAdmin, async (req, res) => {
     }
 });
 
-// АДМИНКА: ОБНОВЛЕНИЕ СТАТУСА СООБЩЕНИЯ
 app.post('/admin/messages/update-status/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
@@ -450,12 +443,12 @@ app.post('/admin/messages/update-status/:id', isAdmin, async (req, res) => {
     }
 });
 
-// Маршрут для сохранения ответа администратора
+
 app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
     const { id } = req.params;
     const { admin_answer } = req.body;
     try {
-        // Сохраняем ответ и автоматически меняем статус на "completed" (обработано)
+      
         await db.query(
             'UPDATE contact_messages SET admin_answer = ?, status = "completed" WHERE id = ?', 
             [admin_answer, id]
@@ -470,3 +463,9 @@ app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
+
+
+
+
