@@ -133,6 +133,164 @@ app.get('/services', async (req, res) => {
     }
 });
 
+// Страница отдельной услуги
+// Страница отдельной услуги
+app.get('/services/:id', async (req, res) => {
+    try {
+        const serviceId = req.params.id;
+        const [services] = await db.query('SELECT * FROM services WHERE id = ?', [serviceId]);
+        
+        if (services.length === 0) {
+            return res.status(404).render('404', { title: 'Услуга не найдена' });
+        }
+        
+        const service = services[0];
+        
+        // Парсим дополнительные фото - ИСПРАВЛЕНО
+        let additionalImages = [];
+        if (service.images_json && service.images_json !== 'null' && service.images_json !== '') {
+            try {
+                // Если images_json уже массив строк
+                if (typeof service.images_json === 'string') {
+                    additionalImages = JSON.parse(service.images_json);
+                } else if (Array.isArray(service.images_json)) {
+                    additionalImages = service.images_json;
+                }
+            } catch(e) { 
+                console.error('Ошибка парсинга images_json:', e);
+                additionalImages = []; 
+            }
+        }
+        
+        // Получаем все услуги для выпадающего списка
+        const [allServices] = await db.query('SELECT id, title FROM services ORDER BY title');
+        
+        res.render('service_detail', {
+            title: `${service.title} | ВентРесурс`,
+            service: service,
+            additionalImages: additionalImages,
+            allServices: allServices,
+            user: req.session.user || null
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки услуги:', err);
+        res.status(500).send('Ошибка загрузки страницы');
+    }
+});
+
+// API: отправка заявки на услугу
+app.post('/api/service-order', async (req, res) => {
+    const { service_id, service_title, name, email, phone, comment } = req.body;
+    const userId = req.session.user?.id || null;
+    
+    try {
+        await db.query(
+            'INSERT INTO service_orders (user_id, service_id, service_title, name, email, phone, comment, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            [userId, service_id, service_title, name, email, phone, comment, 'new']
+        );
+        
+        res.json({ success: true, message: 'Заявка успешно отправлена' });
+    } catch (err) {
+        console.error('Ошибка сохранения заявки:', err);
+        res.status(500).json({ success: false, error: 'Ошибка сервера' });
+    }
+});
+
+// Админ: редактирование услуги (страница)
+// Админ: редактирование услуги (страница)
+app.get('/admin/services/edit/:id', isAdmin, async (req, res) => {
+    try {
+        const [services] = await db.query('SELECT * FROM services WHERE id = ?', [req.params.id]);
+        if (services.length === 0) {
+            return res.status(404).send('Услуга не найдена');
+        }
+        
+        const service = services[0];
+        let additionalImages = [];
+        if (service.images_json) {
+            try {
+                additionalImages = JSON.parse(service.images_json);
+            } catch(e) { additionalImages = []; }
+        }
+        
+        res.render('admin/service_edit', {
+            title: 'Редактирование услуги | Админ',
+            service: service,
+            additionalImages: additionalImages,
+            error: req.query.error  // <-- ДОБАВЬТЕ ЭТУ СТРОКУ
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
+
+// Админ: обновление услуги
+// Админ: обновление услуги с загрузкой фото
+app.post('/admin/services/update/:id', isAdmin, upload.fields([
+    { name: 'main_image', maxCount: 1 },
+    { name: 'additional_images', maxCount: 10 }
+]), async (req, res) => {
+    const { title, description, full_description, price, seo_title, seo_description } = req.body;
+    const serviceId = req.params.id;
+    
+    try {
+        // Получаем текущие данные услуги
+        const [services] = await db.query('SELECT * FROM services WHERE id = ?', [serviceId]);
+        if (services.length === 0) {
+            return res.redirect('/admin/services?error=notfound');
+        }
+        const currentService = services[0];
+        
+        let image_url = currentService.image_url;
+        let images_json = currentService.images_json;
+        
+        // Проверяем, есть ли загруженные файлы
+        const files = req.files || {};
+        
+        // Обработка главного фото
+        if (files.main_image && files.main_image[0]) {
+            // Удаляем старое фото если есть
+            if (image_url && image_url !== '') {
+                const oldImagePath = `public/img/${image_url}`;
+                if (fs.existsSync(oldImagePath)) {
+                    fs.unlinkSync(oldImagePath);
+                }
+            }
+            image_url = files.main_image[0].filename;
+        }
+        
+        // Обработка дополнительных фото
+        if (files.additional_images && files.additional_images.length > 0) {
+            let currentImages = [];
+            if (images_json && images_json !== '') {
+                try {
+                    currentImages = JSON.parse(images_json);
+                } catch(e) { 
+                    currentImages = []; 
+                }
+            }
+            
+            // Добавляем новые фото
+            files.additional_images.forEach(file => {
+                currentImages.push(file.filename);
+            });
+            
+            images_json = JSON.stringify(currentImages);
+        }
+        
+        await db.query(
+            'UPDATE services SET title = ?, description = ?, full_description = ?, price = ?, image_url = ?, images_json = ?, seo_title = ?, seo_description = ? WHERE id = ?',
+            [title, description, full_description, price, image_url, images_json, seo_title || title, seo_description || description, serviceId]
+        );
+        
+        res.redirect('/admin/services?success=updated');
+    } catch (err) {
+        console.error('Ошибка обновления:', err);
+        res.redirect(`/admin/services/edit/${serviceId}?error=1`);
+    }
+});
+
 app.get('/projects', async (req, res) => {
     try {
         const [projects] = await db.query('SELECT * FROM projects ORDER BY year DESC');

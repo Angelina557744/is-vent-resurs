@@ -1,0 +1,365 @@
+<%- include('partials/header') %>
+
+<style>
+    .service-detail-container {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 0 20px;
+    }
+    
+    .service-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 40px;
+    }
+    
+    .service-main h1 {
+        font-size: 2rem;
+        color: var(--black);
+        margin-bottom: 20px;
+    }
+    
+    .service-main-image {
+        width: 100%;
+        border-radius: 15px;
+        overflow: hidden;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+    
+    .service-main-image img {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+    
+    .service-full-description {
+        line-height: 1.8;
+        color: #444;
+        margin-bottom: 30px;
+    }
+    
+    .service-full-description p {
+        margin-bottom: 15px;
+    }
+    
+    .service-gallery {
+        margin-top: 40px;
+    }
+    
+    .service-gallery h3 {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        color: var(--primary-blue);
+    }
+    
+    .gallery-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+    }
+    
+    .gallery-grid img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: transform 0.3s;
+    }
+    
+    .gallery-grid img:hover {
+        transform: scale(1.05);
+    }
+    
+    /* Sidebar */
+    .service-sidebar {
+        position: sticky;
+        top: 150px;
+    }
+    
+    .order-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        border: 1px solid #eee;
+        margin-bottom: 20px;
+    }
+    
+    .order-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 10px;
+        color: var(--primary-blue);
+    }
+    
+    .order-price {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--primary-blue);
+        margin: 15px 0;
+    }
+    
+    .order-btn {
+        width: 100%;
+        padding: 14px;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+    
+    .order-btn:hover {
+        background: var(--dark-blue);
+    }
+    
+    /* Модальное окно */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 500px;
+        width: 90%;
+        padding: 30px;
+        position: relative;
+    }
+    
+    .modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #999;
+    }
+    
+    .modal-close:hover {
+        color: #333;
+    }
+    
+    .modal h3 {
+        margin-bottom: 20px;
+        color: var(--primary-blue);
+    }
+    
+    .modal input, .modal select, .modal textarea {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-family: 'CascadiaCode', monospace;
+    }
+    
+    .modal textarea {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .modal-submit {
+        width: 100%;
+        padding: 14px;
+        background: var(--primary-blue);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+        .service-detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .service-sidebar {
+            position: static;
+        }
+        
+        .gallery-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .gallery-item {
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.gallery-item img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.gallery-item img:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<div class="service-detail-container">
+    <div class="service-detail-grid">
+        <div class="service-main">
+            <h1><%= service.title %></h1>
+            
+            <div class="service-main-image" style="max-width: 80%; margin: 0 auto 30px auto;">
+    <% if (service.image_url && service.image_url !== '') { %>
+        <img src="/img/<%= service.image_url %>" alt="<%= service.title %>" style="width: 100%; height: auto; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1);">
+    <% } else { %>
+        <img src="/img/placeholder-service.jpg" alt="<%= service.title %>" style="width: 100%; height: auto; border-radius: 15px;">
+    <% } %>
+</div>
+            
+            <div class="service-full-description">
+                <% if (service.full_description) { %>
+                    <%- service.full_description.replace(/\n/g, '<br>') %>
+                <% } else { %>
+                    <p><%= service.description %></p>
+                    <p>Компания "ВентРесурс" предлагает профессиональные услуги по <%= service.title.toLowerCase() %>. Наши специалисты имеют многолетний опыт работы и используют только качественное оборудование.</p>
+                    <p>Мы гарантируем высокое качество работ, соблюдение сроков и индивидуальный подход к каждому клиенту. Оставьте заявку, и мы подготовим для вас коммерческое предложение.</p>
+                <% } %>
+            </div>
+            
+<% if (additionalImages && additionalImages.length > 0) { %>
+    <div class="service-gallery">
+        <h3>Фотографии выполненных работ</h3>
+        <div class="gallery-grid">
+            <% additionalImages.forEach(img => { %>
+                <div class="gallery-item">
+                    <img src="/img/<%= img %>" alt="Фото работ" onclick="openImageModal(this.src)">
+                </div>
+            <% }) %>
+        </div>
+    </div>
+<% } %>
+        </div>
+        
+        <div class="service-sidebar">
+            <div class="order-card">
+                <h3>Заказать услугу</h3>
+                <p>Оставьте заявку, и наш специалист свяжется с вами для консультации</p>
+                <% if (service.price && service.price > 0) { %>
+                    <div class="order-price">от <%= service.price.toLocaleString() %> ₽</div>
+                <% } %>
+                <button class="order-btn" onclick="openOrderModal()">Оформить заказ</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно -->
+<div id="orderModal" class="modal">
+    <div class="modal-content">
+        <span class="modal-close" onclick="closeOrderModal()">&times;</span>
+        <h3>Оформление заказа</h3>
+        <form id="orderForm">
+            <select name="service_id" id="serviceSelect" required>
+                <% allServices.forEach(s => { %>
+                    <option value="<%= s.id %>" <%= s.id == service.id ? 'selected' : '' %>><%= s.title %></option>
+                <% }) %>
+            </select>
+            <input type="text" name="name" id="orderName" placeholder="Ваше имя *" required>
+            <input type="email" name="email" id="orderEmail" placeholder="Email *" required>
+            <input type="tel" name="phone" id="orderPhone" placeholder="Телефон *" required>
+            <textarea name="comment" placeholder="Комментарий к заказу"></textarea>
+            <button type="submit" class="modal-submit">Отправить заявку</button>
+        </form>
+        <div id="orderMessage" style="margin-top: 15px; text-align: center;"></div>
+    </div>
+</div>
+
+<script>
+    // Автозаполнение для авторизованного пользователя
+    <% if (user) { %>
+        document.getElementById('orderName').value = '<%= user.full_name %>';
+        <% if (user.email) { %>
+            document.getElementById('orderEmail').value = '<%= user.email %>';
+        <% } %>
+    <% } %>
+    
+    function openOrderModal() {
+        document.getElementById('orderModal').classList.add('active');
+    }
+    
+    function closeOrderModal() {
+        document.getElementById('orderModal').classList.remove('active');
+        document.getElementById('orderMessage').innerHTML = '';
+    }
+    
+    document.getElementById('orderForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const formData = {
+            service_id: document.getElementById('serviceSelect').value,
+            service_title: document.getElementById('serviceSelect').options[document.getElementById('serviceSelect').selectedIndex].text,
+            name: document.getElementById('orderName').value,
+            email: document.getElementById('orderEmail').value,
+            phone: document.getElementById('orderPhone').value,
+            comment: document.querySelector('#orderForm textarea').value
+        };
+        
+        const messageDiv = document.getElementById('orderMessage');
+        messageDiv.innerHTML = '<span style="color: #007bff;">Отправка...</span>';
+        
+        try {
+            const response = await fetch('/api/service-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                messageDiv.innerHTML = '<span style="color: #28a745;">✅ Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.</span>';
+                setTimeout(() => {
+                    closeOrderModal();
+                    document.getElementById('orderForm').reset();
+                }, 2000);
+            } else {
+                messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Ошибка: ' + result.error + '</span>';
+            }
+        } catch (err) {
+            messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Ошибка соединения</span>';
+        }
+    });
+    
+    function openImageModal(src) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:2000; display:flex; align-items:center; justify-content:center; cursor:pointer;';
+        modal.innerHTML = `<img src="${src}" style="max-width:90%; max-height:90%; object-fit:contain;">`;
+        modal.onclick = () => modal.remove();
+        document.body.appendChild(modal);
+    }
+    
+    // Закрытие модалки по клику вне
+    document.getElementById('orderModal').addEventListener('click', (e) => {
+        if (e.target === document.getElementById('orderModal')) {
+            closeOrderModal();
+        }
+    });
+</script>
+
+<%- include('partials/footer') %>

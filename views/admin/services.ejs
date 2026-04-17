@@ -72,13 +72,10 @@
                     <% services.forEach(service => { %>
                         <tr style="border-bottom: 1px solid #eee;">
                             <td style="padding: 15px; font-weight: 500;"><%= service.title %></td>
-                            <td style="padding: 15px; text-align: center; display: flex; justify-content: center; gap: 10px;">
-                                <form action="/admin/services/delete/<%= service.id %>" method="POST" onsubmit="return confirm('Вы уверены?')">
-                                    <button type="submit" style="background:none; border:none; color:#dc3545; cursor:pointer;">
-                                        <i data-lucide="trash-2" size="18"></i> Удалить
-                                    </button>
-                                </form>
-                            </td>
+<td style="padding: 12px;">
+    <a href="/admin/services/edit/<%= service.id %>" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none;">Редактировать</a>
+    <button onclick="deleteService(<%= service.id %>)" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Удалить</button>
+</td>
                         </tr>
                     <% }) %>
                 </tbody>
