@@ -4,7 +4,8 @@ const dotenv = require('dotenv');
 const session = require('express-session');
 const bcrypt = require('bcryptjs');
 const axios = require('axios');
-
+const multer = require('multer');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -24,6 +25,32 @@ testConnection();
 
 const PORT = process.env.PORT || 3000;
 
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        const uploadDir = path.join(__dirname, 'public', 'img');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = path.extname(file.originalname);
+        cb(null, 'cert-' + uniqueSuffix + ext);
+    }
+});
+
+const upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg' || file.mimetype === 'image/png') {
+            cb(null, true);
+        } else {
+            cb(new Error('Только JPG и PNG'));
+        }
+    }
+});
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -749,6 +776,292 @@ app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).send('Ошибка при сохранении ответа');
+    }
+});
+
+app.get('/api/certificates', async (req, res) => {
+    try {
+        const [certificates] = await db.query(
+            'SELECT * FROM certificates WHERE is_active = 1 ORDER BY order_index ASC'
+        );
+        res.json(certificates);
+    } catch (err) {
+        console.error('Ошибка получения сертификатов:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Админ: страница управления сертификатами
+app.get('/admin/certificates', isAdmin, async (req, res) => {
+    try {
+        const [certificates] = await db.query(
+            'SELECT * FROM certificates ORDER BY order_index ASC'
+        );
+        res.render('admin/certificates', {
+            title: 'Сертификаты и лицензии | Админ',
+            certificates: certificates,
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
+
+// Админ: добавление сертификата с загрузкой файла
+app.post('/admin/certificates/add', isAdmin, upload.single('image'), async (req, res) => {
+    const { title, is_active } = req.body;
+    
+    if (!title || !req.file) {
+        return res.redirect('/admin/certificates?error=1');
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO certificates (title, image_url, is_active) VALUES (?, ?, ?)',
+            [title, req.file.filename, is_active === 'on' ? 1 : 0]
+        );
+        res.redirect('/admin/certificates?success=1');
+    } catch (err) {
+        console.error('Ошибка добавления:', err);
+        res.redirect('/admin/certificates?error=1');
+    }
+});
+
+// Админ: обновление сертификата
+app.post('/admin/certificates/update/:id', isAdmin, upload.single('image'), async (req, res) => {
+    const { id } = req.params;
+    const { title, is_active, existing_image } = req.body;
+    
+    let image_url = existing_image;
+    
+    // Если загружена новая картинка
+    if (req.file) {
+        // Удаляем старую картинку
+        if (existing_image) {
+            const oldPath = path.join(__dirname, 'public', 'img', existing_image);
+            if (fs.existsSync(oldPath)) {
+                fs.unlinkSync(oldPath);
+            }
+        }
+        image_url = req.file.filename;
+    }
+    
+    try {
+        await db.query(
+            'UPDATE certificates SET title = ?, image_url = ?, is_active = ? WHERE id = ?',
+            [title, image_url, is_active === 'on' ? 1 : 0, id]
+        );
+        res.redirect('/admin/certificates?success=2');
+    } catch (err) {
+        console.error('Ошибка обновления:', err);
+        res.redirect('/admin/certificates?error=2');
+    }
+});
+
+// Админ: удаление сертификата
+app.post('/admin/certificates/delete/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        // Получаем имя файла перед удалением
+        const [cert] = await db.query('SELECT image_url FROM certificates WHERE id = ?', [id]);
+        
+        // Удаляем файл из папки
+        if (cert[0] && cert[0].image_url) {
+            const filePath = path.join(__dirname, 'public', 'img', cert[0].image_url);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        
+        await db.query('DELETE FROM certificates WHERE id = ?', [id]);
+        res.redirect('/admin/certificates?success=3');
+    } catch (err) {
+        console.error('Ошибка удаления:', err);
+        res.redirect('/admin/certificates?error=3');
+    }
+});
+
+// Админ: сортировка сертификатов
+app.post('/admin/certificates/reorder', isAdmin, async (req, res) => {
+    const { order } = req.body;
+    
+    try {
+        for (let i = 0; i < order.length; i++) {
+            await db.query(
+                'UPDATE certificates SET order_index = ? WHERE id = ?',
+                [i, order[i]]
+            );
+        }
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка сортировки:', err);
+        res.status(500).json({ error: 'Ошибка' });
+    }
+});
+
+
+// ========== УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ (АДМИН) ==========
+
+// Страница списка пользователей
+app.get('/admin/users', isAdmin, async (req, res) => {
+    try {
+        const { search, role, sort, order } = req.query;
+        
+        let query = `
+            SELECT u.id, u.username, u.full_name, u.email, u.phone, u.role, u.created_at, u.is_blocked,
+                   (SELECT COUNT(*) FROM quiz_results WHERE user_id = u.id) as quiz_count
+            FROM users u
+            WHERE 1=1
+        `;
+        const params = [];
+        
+        if (search) {
+            query += ` AND (u.full_name LIKE ? OR u.email LIKE ? OR u.phone LIKE ?)`;
+            const searchParam = `%${search}%`;
+            params.push(searchParam, searchParam, searchParam);
+        }
+        
+        if (role && role !== 'all') {
+            query += ` AND u.role = ?`;
+            params.push(role);
+        }
+        
+        const sortColumn = sort === 'id' ? 'u.id' : sort === 'name' ? 'u.full_name' : sort === 'date' ? 'u.created_at' : 'u.id';
+        const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
+        query += ` ORDER BY ${sortColumn} ${sortOrder}`;
+        
+        const [users] = await db.query(query, params);
+        
+        res.render('admin/users', {
+            title: 'Пользователи | Админ-панель',
+            users: users,
+            search: search || '',
+            role: role || 'all',
+            sort: sort || 'id',
+            order: order || 'desc',
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка загрузки пользователей:', err);
+        res.status(500).send('Ошибка загрузки пользователей');
+    }
+});
+
+// Страница редактирования пользователя
+// Страница редактирования пользователя
+app.get('/admin/users/:id/edit', isAdmin, async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        const [users] = await db.query('SELECT * FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) {
+            return res.status(404).send('Пользователь не найден');
+        }
+        
+        const user = users[0];
+        
+        // Квизы пользователя
+        const [quizResults] = await db.query(
+            'SELECT * FROM quiz_results WHERE user_id = ? ORDER BY created_at DESC',
+            [userId]
+        );
+        
+        // Сообщения пользователя
+        const [messages] = await db.query(
+            'SELECT * FROM contact_messages WHERE email = ? ORDER BY created_at DESC',
+            [user.email]
+        );
+        
+        // Заявки на звонок
+        const [callbacks] = await db.query(
+            'SELECT * FROM callbacks WHERE phone = ? ORDER BY created_at DESC',
+            [user.phone || '']
+        );
+        
+        res.render('admin/user_edit', {
+            title: `Редактирование: ${user.full_name} | Админ`,
+            user: user,
+            currentUserId: req.session.user.id,
+            quizResults: quizResults,
+            messages: messages,
+            callbacks: callbacks,
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
+
+// Обновление пользователя
+app.post('/admin/users/:id/update', isAdmin, async (req, res) => {
+    const userId = req.params.id;
+    const { full_name, email, phone, role, is_blocked } = req.body;
+    
+    // Нельзя менять роль у самого себя
+    if (userId == req.session.user.id && role !== req.session.user.role) {
+        return res.redirect(`/admin/users/${userId}/edit?error=Нельзя изменить свою роль`);
+    }
+    
+    try {
+        await db.query(
+            'UPDATE users SET full_name = ?, email = ?, phone = ?, role = ?, is_blocked = ? WHERE id = ?',
+            [full_name, email, phone || null, role, is_blocked === 'on' ? 1 : 0, userId]
+        );
+        res.redirect(`/admin/users/${userId}/edit?success=1`);
+    } catch (err) {
+        console.error('Ошибка обновления:', err);
+        res.redirect(`/admin/users/${userId}/edit?error=1`);
+    }
+});
+
+// Сброс пароля
+app.post('/admin/users/:id/reset-password', isAdmin, async (req, res) => {
+    const userId = req.params.id;
+    const { new_password } = req.body;
+    
+    if (!new_password || new_password.length < 4) {
+        return res.redirect(`/admin/users/${userId}/edit?error=Пароль должен быть не менее 4 символов`);
+    }
+    
+    try {
+        const hashedPassword = await bcrypt.hash(new_password, 10);
+        await db.query('UPDATE users SET password = ? WHERE id = ?', [hashedPassword, userId]);
+        res.redirect(`/admin/users/${userId}/edit?success=Пароль изменен`);
+    } catch (err) {
+        console.error('Ошибка сброса пароля:', err);
+        res.redirect(`/admin/users/${userId}/edit?error=Ошибка при сбросе пароля`);
+    }
+});
+
+// Удаление пользователя
+app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
+    const userId = req.params.id;
+    
+    if (userId == req.session.user.id) {
+        return res.redirect('/admin/users?error=Нельзя удалить самого себя');
+    }
+    
+    try {
+        // Проверяем, не админ ли
+        const [users] = await db.query('SELECT role FROM users WHERE id = ?', [userId]);
+        if (users.length > 0 && users[0].role === 'admin') {
+            return res.redirect('/admin/users?error=Нельзя удалить администратора');
+        }
+        
+        // Удаляем связанные данные
+        await db.query('DELETE FROM quiz_results WHERE user_id = ?', [userId]);
+        await db.query('DELETE FROM users WHERE id = ?', [userId]);
+        
+        res.redirect('/admin/users?success=Пользователь удален');
+    } catch (err) {
+        console.error('Ошибка удаления:', err);
+        res.redirect('/admin/users?error=Ошибка при удалении');
     }
 });
 

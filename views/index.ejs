@@ -84,6 +84,168 @@
         </div>
     </div>
 </section>
+<!-- Блок Сертификаты и лицензии -->
+<section class="certificates-section" style="padding: 60px 0; background: #f8f9fa;">
+    <div class="container">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="font-size: 2rem; color: var(--black);">Сертификаты и лицензии компании</h2>
+            <div style="width: 60px; height: 3px; background: var(--primary-blue); margin: 15px auto 0;"></div>
+        </div>
+        
+        <div id="certificates-slider" style="max-width: 800px; margin: 0 auto; position: relative;">
+            <div id="certificates-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; text-align: center;">
+                <!-- Здесь будут загружаться сертификаты -->
+            </div>
+            
+           <button id="prev-cert" style="position: absolute; left: -60px; top: 50%; transform: translateY(-50%); background: var(--primary-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+    </svg>
+</button>
+
+<button id="next-cert" style="position: absolute; right: -60px; top: 50%; transform: translateY(-50%); background: var(--primary-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+</button>
+        
+        <div style="text-align: center; margin-top: 20px;">
+            <span id="cert-counter" style="font-size: 0.8rem; color: #888;"></span>
+        </div>
+    </div>
+</section>
+
+<script>
+    let certificates = [];
+    let currentStartIndex = 0;
+    const itemsPerPage = 5;
+    
+    async function loadCertificates() {
+        try {
+            const response = await fetch('/api/certificates');
+            certificates = await response.json();
+            
+            if (certificates.length > 0) {
+                renderCertificates();
+                updateButtons();
+                updateCounter();
+            } else {
+                document.getElementById('certificates-container').innerHTML = '<p style="color: #999; grid-column: span 5; text-align: center;">Сертификаты временно отсутствуют</p>';
+            }
+        } catch (err) {
+            console.error('Ошибка загрузки сертификатов:', err);
+        }
+    }
+    
+    function renderCertificates() {
+        const container = document.getElementById('certificates-container');
+        const endIndex = Math.min(currentStartIndex + itemsPerPage, certificates.length);
+        const visibleCerts = certificates.slice(currentStartIndex, endIndex);
+        
+        container.innerHTML = '';
+        
+        visibleCerts.forEach(cert => {
+            const certDiv = document.createElement('div');
+            certDiv.style.cssText = 'text-align: center;';
+            certDiv.innerHTML = `
+                <div style="background: white; padding: 10px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                    <img src="/img/${cert.image_url}" alt="${cert.title}" style="width: 100%; max-width: 130px; height: auto; border-radius: 5px; cursor: pointer;" onclick="showFullImage('/img/${cert.image_url}')">
+                </div>
+                <div style="margin-top: 10px; font-size: 0.75rem; font-weight: 500; color: #555;">${cert.title}</div>
+            `;
+            container.appendChild(certDiv);
+        });
+        
+        // Заполняем пустые места если нужно
+        const remaining = itemsPerPage - visibleCerts.length;
+        for (let i = 0; i < remaining; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.style.cssText = 'visibility: hidden;';
+            container.appendChild(emptyDiv);
+        }
+    }
+    
+    function updateButtons() {
+        const prevBtn = document.getElementById('prev-cert');
+        const nextBtn = document.getElementById('next-cert');
+        
+        if (certificates.length <= itemsPerPage) {
+            prevBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+        } else {
+            prevBtn.style.display = currentStartIndex > 0 ? 'flex' : 'none';
+            nextBtn.style.display = currentStartIndex + itemsPerPage < certificates.length ? 'flex' : 'none';
+        }
+    }
+    
+    function updateCounter() {
+        const counter = document.getElementById('cert-counter');
+        if (counter && certificates.length > 0) {
+            const endIndex = Math.min(currentStartIndex + itemsPerPage, certificates.length);
+            counter.innerHTML = (currentStartIndex + 1) + ' - ' + endIndex + ' из ' + certificates.length;
+        }
+    }
+    
+    function showFullImage(src) {
+        // Создаем модальное окно для просмотра крупного фото
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+        modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; object-fit: contain;">`;
+        modal.onclick = () => modal.remove();
+        document.body.appendChild(modal);
+    }
+    
+    document.getElementById('prev-cert')?.addEventListener('click', () => {
+        if (currentStartIndex - itemsPerPage >= 0) {
+            currentStartIndex -= itemsPerPage;
+        } else {
+            currentStartIndex = Math.max(0, certificates.length - itemsPerPage);
+        }
+        renderCertificates();
+        updateButtons();
+        updateCounter();
+    });
+    
+    document.getElementById('next-cert')?.addEventListener('click', () => {
+        if (currentStartIndex + itemsPerPage < certificates.length) {
+            currentStartIndex += itemsPerPage;
+        } else {
+            currentStartIndex = 0;
+        }
+        renderCertificates();
+        updateButtons();
+        updateCounter();
+    });
+    
+    loadCertificates();
+</script>
+
+<style>
+    @media (max-width: 768px) {
+        #certificates-container {
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 15px !important;
+        }
+        #prev-cert {
+            left: -40px !important;
+            width: 35px !important;
+            height: 35px !important;
+            font-size: 16px !important;
+        }
+        #next-cert {
+            right: -40px !important;
+            width: 35px !important;
+            height: 35px !important;
+            font-size: 16px !important;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        #certificates-container {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+</style>
 
 <section class="partners-ticker clients">
     <div class="container">

@@ -573,3 +573,25 @@ body {
 [class*="ymaps-2-1-79-map"] {
     background: transparent !important;
 }
+
+
+/* Адаптив для карусели сертификатов */
+@media (max-width: 768px) {
+    #certificates-slider {
+        max-width: 280px !important;
+    }
+    
+    #prev-cert {
+        left: -40px !important;
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 16px !important;
+    }
+    
+    #next-cert {
+        right: -40px !important;
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 16px !important;
+    }
+}

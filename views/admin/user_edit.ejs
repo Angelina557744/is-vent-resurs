@@ -1,0 +1,169 @@
+<%- include('../partials/header') %>
+
+<main class="container" style="margin-top: 40px; margin-bottom: 50px;">
+    <div style="background: white; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2><i data-lucide="user-circle"></i> Редактирование: <%= user.full_name %></h2>
+            <a href="/admin/users" style="background: #6c757d; color: white; padding: 8px 15px; border-radius: 5px; text-decoration: none;">← Назад к списку</a>
+        </div>
+        <hr style="margin-bottom: 25px;">
+
+        <% if (success) { %>
+            <div style="background: #d4edda; color: #155724; padding: 10px; border-radius: 6px; margin-bottom: 20px;"><%= success %></div>
+        <% } %>
+        <% if (error) { %>
+            <div style="background: #f8d7da; color: #721c24; padding: 10px; border-radius: 6px; margin-bottom: 20px;"><%= error %></div>
+        <% } %>
+
+        <!-- Форма редактирования -->
+        <form action="/admin/users/<%= user.id %>/update" method="POST" style="margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">Основная информация</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Логин</label>
+                    <input type="text" value="<%= user.username %>" disabled style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background: #f5f5f5;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">ФИО *</label>
+                    <input type="text" name="full_name" value="<%= user.full_name %>" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Email *</label>
+                    <input type="email" name="email" value="<%= user.email %>" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Телефон</label>
+                    <input type="text" name="phone" value="<%= user.phone || '' %>" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Роль</label>
+                    <select name="role" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                        <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>Пользователь</option>
+                        <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Администратор</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: flex; align-items: center; gap: 10px; margin-top: 25px; cursor: pointer;">
+                        <input type="checkbox" name="is_blocked" <%= user.is_blocked ? 'checked' : '' %>> Заблокировать аккаунт
+                    </label>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-blue" style="margin-top: 20px;">Сохранить изменения</button>
+        </form>
+
+        <hr style="margin: 30px 0;">
+
+        <!-- Сброс пароля -->
+        <form action="/admin/users/<%= user.id %>/reset-password" method="POST" style="margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px;">Сброс пароля</h3>
+            <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <input type="text" name="new_password" placeholder="Новый пароль" required style="width: 300px; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                <button type="submit" style="background: #ffc107; color: #333; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer;">Установить пароль</button>
+            </div>
+        </form>
+
+        <hr style="margin: 30px 0;">
+
+        <!-- Удаление пользователя -->
+<% if (user.id != currentUserId) { %>
+            <form action="/admin/users/<%= user.id %>/delete" method="POST" onsubmit="return confirm('Вы уверены? Все данные пользователя будут удалены безвозвратно.')" style="margin-bottom: 30px;">
+                <button type="submit" style="background: #dc3545; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer;">Удалить пользователя</button>
+            </form>
+            <hr style="margin: 30px 0;">
+        <% } %>
+
+        <!-- Квизы пользователя -->
+        <h3 style="margin-bottom: 15px;">Квизы пользователя (<%= quizResults.length %>)</h3>
+        <% if (quizResults.length > 0) { %>
+            <div style="overflow-x: auto; margin-bottom: 30px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px;">Тип системы</th>
+                            <th style="padding: 10px;">Площадь</th>
+                            <th style="padding: 10px;">Бюджет</th>
+                            <th style="padding: 10px;">Сумма</th>
+                            <th style="padding: 10px;">Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% quizResults.forEach(q => { %>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px;"><%= q.building_type %></td>
+                                <td style="padding: 10px;"><%= q.area %> м²</td>
+                                <td style="padding: 10px;"><%= q.budget_range %></td>
+                                <td style="padding: 10px;"><%= q.estimated_price.toLocaleString() %> руб.</td>
+                                <td style="padding: 10px;"><%= new Date(q.created_at).toLocaleString('ru-RU') %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p style="color: #999; margin-bottom: 30px;">Нет пройденных квизов</p>
+        <% } %>
+
+        <!-- Сообщения пользователя -->
+        <h3 style="margin-bottom: 15px;">Сообщения с сайта (<%= messages.length %>)</h3>
+        <% if (messages.length > 0) { %>
+            <div style="overflow-x: auto; margin-bottom: 30px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px;">Сообщение</th>
+                            <th style="padding: 10px;">Категория</th>
+                            <th style="padding: 10px;">Ответ</th>
+                            <th style="padding: 10px;">Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% messages.forEach(msg => { %>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px; max-width: 250px;"><%= msg.message %></td>
+                                <td style="padding: 10px;"><%= msg.category || 'Общее' %></td>
+                                <td style="padding: 10px; max-width: 250px;"><%= msg.admin_answer || 'Нет ответа' %></td>
+                                <td style="padding: 10px;"><%= new Date(msg.created_at).toLocaleString('ru-RU') %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p style="color: #999; margin-bottom: 30px;">Нет сообщений</p>
+        <% } %>
+
+        <!-- Заявки на звонок -->
+        <h3 style="margin-bottom: 15px;">Заявки на звонок (<%= callbacks.length %>)</h3>
+        <% if (callbacks.length > 0) { %>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 10px;">Имя</th>
+                            <th style="padding: 10px;">Телефон</th>
+                            <th style="padding: 10px;">Дата</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% callbacks.forEach(cb => { %>
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 10px;"><%= cb.name %></td>
+                                <td style="padding: 10px;"><%= cb.phone %></td>
+                                <td style="padding: 10px;"><%= new Date(cb.created_at).toLocaleString('ru-RU') %></td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p style="color: #999;">Нет заявок на звонок</p>
+        <% } %>
+    </div>
+</main>
+
+<script>
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+</script>
+
+<%- include('../partials/footer') %>
