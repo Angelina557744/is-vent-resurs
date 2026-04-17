@@ -206,6 +206,48 @@ app.get('/profile/quiz', isAuth, (req, res) => {
 });
 
 
+// Обновление профиля пользователя
+app.post('/api/profile/update', isAuth, async (req, res) => {
+    const userId = req.session.user.id;
+    const { email, phone, password } = req.body;
+    
+    try {
+        // Проверяем, не занят ли email другим пользователем
+        if (email) {
+            const [existing] = await db.query(
+                'SELECT id FROM users WHERE email = ? AND id != ?', 
+                [email, userId]
+            );
+            if (existing.length > 0) {
+                return res.json({ success: false, error: 'Этот email уже используется' });
+            }
+        }
+        
+        let query = 'UPDATE users SET email = ?, phone = ?';
+        const params = [email, phone || null];
+        
+        // Если ввели новый пароль - обновляем
+        if (password && password.length >= 4) {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            query += ', password = ?';
+            params.push(hashedPassword);
+        }
+        
+        query += ' WHERE id = ?';
+        params.push(userId);
+        
+        await db.query(query, params);
+        
+        // Обновляем email в сессии
+        req.session.user.email = email;
+        
+        res.json({ success: true, message: 'Профиль успешно обновлен' });
+        
+    } catch (err) {
+        console.error('Ошибка обновления профиля:', err);
+        res.json({ success: false, error: 'Ошибка при обновлении профиля' });
+    }
+});
 
 // Отключаем проверку SSL для GigaChat (временно)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -709,7 +751,6 @@ app.post('/admin/messages/answer/:id', isAdmin, async (req, res) => {
         res.status(500).send('Ошибка при сохранении ответа');
     }
 });
-
 
 
 app.listen(PORT, () => {

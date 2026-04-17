@@ -14,39 +14,103 @@
         <div class="profile-grid">
             
             <!-- ЛЕВАЯ КОЛОНКА - ИНФОРМАЦИЯ ПОЛЬЗОВАТЕЛЯ -->
-            <div class="profile-info-card">
-                <div class="profile-avatar">
-                    <i data-lucide="user-circle" class="profile-avatar-icon"></i>
+           <!-- ЛЕВАЯ КОЛОНКА - ИНФОРМАЦИЯ ПОЛЬЗОВАТЕЛЯ -->
+<!-- ЛЕВАЯ КОЛОНКА - ИНФОРМАЦИЯ ПОЛЬЗОВАТЕЛЯ -->
+<div class="profile-info-card">
+    <div class="profile-avatar">
+        <i data-lucide="user-circle" class="profile-avatar-icon"></i>
+    </div>
+    <h2 class="profile-name"><%= user.full_name %></h2>
+    <span class="profile-badge <%= user.role === 'admin' ? 'profile-badge-admin' : 'profile-badge-user' %>">
+        <%= user.role === 'admin' ? 'Администратор' : 'Клиент' %>
+    </span>
+    
+    <!-- РЕЖИМ ПРОСМОТРА -->
+    <div id="profile-view-mode">
+        <div class="profile-details">
+            <div class="profile-detail-item">
+                <i data-lucide="user" class="profile-detail-icon"></i>
+                <div>
+                    <span class="profile-detail-label">Логин</span>
+                    <span class="profile-detail-value"><%= user.username %></span>
                 </div>
-                <h2 class="profile-name"><%= user.full_name %></h2>
-                <span class="profile-badge <%= user.role === 'admin' ? 'profile-badge-admin' : 'profile-badge-user' %>">
-                    <%= user.role === 'admin' ? 'Администратор' : 'Клиент' %>
-                </span>
-                
-                <div class="profile-details">
-                    <div class="profile-detail-item">
-                        <i data-lucide="user" class="profile-detail-icon"></i>
-                        <div>
-                            <span class="profile-detail-label">Логин</span>
-                            <span class="profile-detail-value"><%= user.username %></span>
-                        </div>
+            </div>
+            <div class="profile-detail-item">
+                <i data-lucide="mail" class="profile-detail-icon"></i>
+                <div>
+                    <span class="profile-detail-label">Email</span>
+                    <span class="profile-detail-value" id="view-email"><%= user.email %></span>
+                </div>
+            </div>
+            <div class="profile-detail-item">
+                <i data-lucide="phone" class="profile-detail-icon"></i>
+                <div>
+                    <span class="profile-detail-label">Телефон</span>
+                    <span class="profile-detail-value" id="view-phone"><%= user.phone || 'Не указан' %></span>
+                </div>
+            </div>
+            <div class="profile-detail-item">
+                <i data-lucide="key" class="profile-detail-icon"></i>
+                <div>
+                    <span class="profile-detail-label">Пароль</span>
+                    <span class="profile-detail-value">••••••••</span>
+                </div>
+            </div>
+        </div>
+        <button onclick="enableEditMode()" class="profile-edit-button">
+            <i data-lucide="edit-2" class="profile-edit-icon"></i>
+            Редактировать профиль
+        </button>
+    </div>
+    
+    <!-- РЕЖИМ РЕДАКТИРОВАНИЯ (скрыт по умолчанию) -->
+    <div id="profile-edit-mode" style="display: none;">
+        <form id="profile-edit-form" onsubmit="saveProfile(event)">
+            <div class="profile-details">
+                <div class="profile-detail-item">
+                    <i data-lucide="user" class="profile-detail-icon"></i>
+                    <div style="flex:1">
+                        <span class="profile-detail-label">Логин</span>
+                        <input type="text" class="profile-edit-input" value="<%= user.username %>" disabled style="background:#f5f5f5">
                     </div>
-                    <div class="profile-detail-item">
-                        <i data-lucide="mail" class="profile-detail-icon"></i>
-                        <div>
-                            <span class="profile-detail-label">Email</span>
-                            <span class="profile-detail-value"><%= user.email %></span>
-                        </div>
+                </div>
+                <div class="profile-detail-item">
+                    <i data-lucide="mail" class="profile-detail-icon"></i>
+                    <div style="flex:1">
+                        <span class="profile-detail-label">Email</span>
+                        <input type="email" name="email" class="profile-edit-input" value="<%= user.email %>" required>
                     </div>
-                    <div class="profile-detail-item">
-                        <i data-lucide="key" class="profile-detail-icon"></i>
-                        <div>
-                            <span class="profile-detail-label">Пароль</span>
-                            <span class="profile-detail-value">••••••••</span>
-                        </div>
+                </div>
+                <div class="profile-detail-item">
+                    <i data-lucide="phone" class="profile-detail-icon"></i>
+                    <div style="flex:1">
+                        <span class="profile-detail-label">Телефон</span>
+                        <input type="tel" name="phone" class="profile-edit-input" value="<%= user.phone || '' %>" placeholder="+7 (XXX) XXX-XX-XX">
+                    </div>
+                </div>
+                <div class="profile-detail-item">
+                    <i data-lucide="key" class="profile-detail-icon"></i>
+                    <div style="flex:1">
+                        <span class="profile-detail-label">Новый пароль (оставьте пустым, чтобы не менять)</span>
+                        <input type="password" name="password" class="profile-edit-input" placeholder="Введите новый пароль">
                     </div>
                 </div>
             </div>
+            <div class="profile-edit-buttons">
+    <button type="submit" class="profile-save-button">
+        <i data-lucide="save" class="profile-save-icon"></i>
+        Сохранить
+    </button>
+    <button type="button" onclick="disableEditMode()" class="profile-cancel-button">
+        <i data-lucide="x" class="profile-cancel-icon"></i>
+        Отмена
+    </button>
+</div>
+<div id="profile-message"></div>
+            <div id="profile-message" style="margin-top: 15px; font-size: 0.85rem;"></div>
+        </form>
+    </div>
+</div>
 
             <!-- ПРАВАЯ КОЛОНКА - БУДУЩИЕ ПРОЕКТЫ -->
             <div class="profile-projects-card">
@@ -778,6 +842,153 @@
     .hide-mobile {
         display: none;
     }
+    .profile-info-card .profile-edit-button {
+        width: 100% !important;
+        margin-top: 25px !important;
+        padding: 14px 20px !important;
+        background: #ffffff !important;
+        color: #007bff !important;
+        border: 2px solid #007bff !important;
+        border-radius: 50px !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: 'CascadiaCode', monospace !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 2px 8px rgba(0,123,255,0.15) !important;
+    }
+    
+    .profile-info-card .profile-edit-button:hover {
+        background: #007bff !important;
+        color: #ffffff !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0,123,255,0.3) !important;
+    }
+    
+    .profile-info-card .profile-edit-button:active {
+        transform: translateY(0) !important;
+    }
+    
+    .profile-edit-icon {
+        width: 18px !important;
+        height: 18px !important;
+    }
+    
+    /* Поля ввода */
+    .profile-edit-input {
+        width: 100% !important;
+        padding: 12px 16px !important;
+        border: 2px solid #e0e0e0 !important;
+        border-radius: 12px !important;
+        font-size: 14px !important;
+        font-family: 'CascadiaCode', monospace !important;
+        margin-top: 6px !important;
+        transition: all 0.3s ease !important;
+        background: #ffffff !important;
+        box-sizing: border-box !important;
+    }
+    
+    .profile-edit-input:focus {
+        outline: none !important;
+        border-color: #007bff !important;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1) !important;
+    }
+    
+    /* Кнопка Сохранить */
+    .profile-save-button {
+        flex: 1 !important;
+        padding: 12px 20px !important;
+        background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 50px !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: 'CascadiaCode', monospace !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .profile-save-button:hover {
+        background: linear-gradient(135deg, #1e7e34 0%, #166b2c 100%) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(40,167,69,0.3) !important;
+    }
+    
+    /* Кнопка Отмена */
+    .profile-cancel-button {
+        flex: 1 !important;
+        padding: 12px 20px !important;
+        background: #ffffff !important;
+        color: #6c757d !important;
+        border: 2px solid #dee2e6 !important;
+        border-radius: 50px !important;
+        cursor: pointer !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        font-family: 'CascadiaCode', monospace !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .profile-cancel-button:hover {
+        background: #f8f9fa !important;
+        border-color: #adb5bd !important;
+        color: #495057 !important;
+        transform: translateY(-2px) !important;
+    }
+    
+    /* Контейнер для кнопок */
+    #profile-edit-mode > form > div:nth-child(2) {
+        display: flex !important;
+        gap: 12px !important;
+        margin-top: 20px !important;
+    }
+    
+    /* Иконки в кнопках */
+    .profile-save-icon,
+    .profile-cancel-icon {
+        width: 16px !important;
+        height: 16px !important;
+    }
+    
+    /* Анимация появления */
+    #profile-edit-mode {
+        animation: fadeInUp 0.4s ease;
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Сообщение */
+    #profile-message {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
 }</style>
 
 
@@ -786,6 +997,61 @@
     if (typeof lucide !== 'undefined') {
         lucide.createIcons();
     }
+</script>
+
+<script>
+// Переключение на режим редактирования
+function enableEditMode() {
+    document.getElementById('profile-view-mode').style.display = 'none';
+    document.getElementById('profile-edit-mode').style.display = 'block';
+    lucide.createIcons();
+}
+
+// Отмена редактирования
+function disableEditMode() {
+    document.getElementById('profile-view-mode').style.display = 'block';
+    document.getElementById('profile-edit-mode').style.display = 'none';
+    document.getElementById('profile-message').innerHTML = '';
+    lucide.createIcons();
+}
+
+// Сохранение профиля
+async function saveProfile(event) {
+    event.preventDefault();
+    
+    const form = document.getElementById('profile-edit-form');
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
+    
+    const messageDiv = document.getElementById('profile-message');
+    messageDiv.innerHTML = '<span style="color: #007bff;">Сохранение...</span>';
+    
+    try {
+        const response = await fetch('/api/profile/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            messageDiv.innerHTML = '<span style="color: #28a745;">✅ ' + result.message + '</span>';
+            // Обновляем отображаемые данные
+            document.getElementById('view-email').innerText = data.email;
+            document.getElementById('view-phone').innerText = data.phone || 'Не указан';
+            // Через 1.5 секунды возвращаемся в режим просмотра
+            setTimeout(() => {
+                disableEditMode();
+                location.reload(); // Обновляем страницу для обновления имени и других данных
+            }, 1500);
+        } else {
+            messageDiv.innerHTML = '<span style="color: #dc3545;">❌ ' + result.error + '</span>';
+        }
+    } catch (err) {
+        messageDiv.innerHTML = '<span style="color: #dc3545;">❌ Ошибка соединения</span>';
+    }
+}
 </script>
 
 <%- include('partials/footer') %>
