@@ -1065,6 +1065,129 @@ app.post('/admin/users/:id/delete', isAdmin, async (req, res) => {
     }
 });
 
+// ========== ИИ-ЧАТ БОТ ==========
+
+// Функция для получения ответа от GigaChat
+async function getBotResponse(userMessage) {
+    const https = require('https');
+    const agent = new https.Agent({ rejectUnauthorized: false });
+    
+    const prompt = `Ты профессиональный консультант компании "ВентРесурс" - специалист по вентиляции и кондиционированию.
+
+Твои правила:
+1. Отвечай кратко и по делу (2-4 предложения)
+2. Будь дружелюбным и профессиональным
+3. Если вопрос про цену - назови примерный диапазон
+4. Если вопрос про монтаж - опиши процесс
+5. Если вопрос про гарантию - скажи про 3 года
+6. Если не знаешь ответ - предложи оставить заявку
+7. В конце всегда предлагай оставить телефон для детальной консультации
+
+Вопрос пользователя: "${userMessage}"
+
+Ответь как консультант ВентРесурс:`;
+
+    try {
+        const token = await getGigaChatToken();
+        
+        const response = await axios.post(
+            'https://gigachat.devices.sberbank.ru/api/v1/chat/completions',
+            {
+                model: "GigaChat",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Ты консультант компании ВентРесурс. Отвечай кратко, профессионально, дружелюбно. Всегда предлагай оставить контакты для детальной консультации."
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                temperature: 0.7,
+                max_tokens: 300,
+                stream: false
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                timeout: 15000,
+                httpsAgent: agent
+            }
+        );
+        
+        return response.data.choices[0].message.content;
+        
+    } catch (err) {
+        console.error('Ошибка GigaChat в чате:', err.message);
+        return "Извините, сейчас наблюдаются технические неполадки. Пожалуйста, оставьте свой номер телефона, и наш специалист свяжется с вами в ближайшее время.";
+    }
+}
+
+// API: Отправка сообщения в чат
+app.post('/api/chat/send', async (req, res) => {
+    const { message, name, phone, sessionId } = req.body;
+    
+    if (!message) {
+        return res.json({ error: 'Сообщение не может быть пустым' });
+    }
+    
+    try {
+        // Получаем ответ от ИИ
+        const botResponse = await getBotResponse(message);
+        
+        // Проверяем, нужно ли связаться с оператором
+        const needCall = botResponse.includes('оставьте') || 
+                        botResponse.includes('номер') || 
+                        botResponse.includes('свяжется');
+        
+        // Сохраняем в базу
+        await db.query(
+            `INSERT INTO chat_messages (session_id, user_name, user_phone, user_message, bot_response, need_call) 
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [sessionId, name || null, phone || null, message, botResponse, needCall ? 1 : 0]
+        );
+        
+        // Если пользователь оставил контакты и нужно связаться - сохраняем в заявки
+        if (needCall && (name || phone)) {
+            await db.query(
+                'INSERT INTO callbacks (name, phone, status) VALUES (?, ?, "new")',
+                [name || 'Чат бот', phone || 'не указан']
+            );
+        }
+        
+        res.json({ 
+            success: true, 
+            response: botResponse,
+            needCall: needCall
+        });
+        
+    } catch (err) {
+        console.error('Ошибка чата:', err);
+        res.json({ 
+            error: true, 
+            response: "Извините, произошла ошибка. Пожалуйста, позвоните нам по телефону +7 (XXX) XXX-XX-XX"
+        });
+    }
+});
+
+// Админ: просмотр сообщений чата
+app.get('/admin/chat', isAdmin, async (req, res) => {
+    try {
+        const [messages] = await db.query(
+            'SELECT * FROM chat_messages ORDER BY created_at DESC LIMIT 100'
+        );
+        res.render('admin/chat', {
+            title: 'История чатов | Админ',
+            messages: messages
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
 
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

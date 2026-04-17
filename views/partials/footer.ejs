@@ -45,5 +45,217 @@
             });
         });
     </script>
+
+<!-- ИИ-Чат помощник -->
+<div id="chat-widget" style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
+    <!-- Кнопка чата -->
+    <div id="chat-toggle" style="width: 60px; height: 60px; background: linear-gradient(135deg, #007bff, #0056b3); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 15px rgba(0,123,255,0.3); transition: transform 0.3s;">
+        <i data-lucide="message-circle" style="color: white; width: 30px; height: 30px;"></i>
+    </div>
+    
+    <!-- Окно чата (скрыто по умолчанию) -->
+    <div id="chat-window" style="position: absolute; bottom: 80px; right: 0; width: 350px; height: 500px; background: white; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; border: 1px solid #e0e0e0;">
+        
+        <!-- Заголовок -->
+        <div style="background: linear-gradient(135deg, #007bff, #0056b3); padding: 15px; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="bot" style="width: 24px; height: 24px;"></i>
+                    <div>
+                        <strong style="font-size: 1rem;">ВентРесурс Помощник</strong>
+                        <div style="font-size: 0.7rem; opacity: 0.8;">Онлайн 24/7</div>
+                    </div>
+                </div>
+                <div id="chat-close" style="cursor: pointer; font-size: 20px;">×</div>
+            </div>
+        </div>
+        
+        <!-- Сообщения -->
+        <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 15px; background: #f5f7fa;">
+            <div style="display: flex; margin-bottom: 15px;">
+                <div style="background: white; padding: 10px 15px; border-radius: 18px; max-width: 80%; box-shadow: 0 1px 2px rgba(0,0,0,0.1); border-bottom-left-radius: 4px;">
+                    Здравствуйте! Я виртуальный помощник компании ВентРесурс. Задайте мне вопрос о вентиляции, кондиционировании или оставьте заявку на звонок.
+                </div>
+            </div>
+        </div>
+        
+        <!-- Форма ввода -->
+        <div style="padding: 10px; border-top: 1px solid #e0e0e0; background: white;">
+            <div id="contact-fields" style="display: none; margin-bottom: 10px;">
+                <input type="text" id="user-name" placeholder="Ваше имя" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; font-size: 14px;">
+                <input type="tel" id="user-phone" placeholder="Номер телефона" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px;">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <textarea id="chat-input" placeholder="Напишите ваш вопрос..." rows="2" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 20px; resize: none; font-family: inherit; font-size: 14px;"></textarea>
+                <button id="chat-send" style="background: #007bff; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer;">
+                    <i data-lucide="send" style="width: 20px; height: 20px;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Инициализация иконок
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatWindow = document.getElementById('chat-window');
+    const chatClose = document.getElementById('chat-close');
+    const chatInput = document.getElementById('chat-input');
+    const chatSend = document.getElementById('chat-send');
+    const chatMessages = document.getElementById('chat-messages');
+    const contactFields = document.getElementById('contact-fields');
+    const userNameInput = document.getElementById('user-name');
+    const userPhoneInput = document.getElementById('user-phone');
+    
+    let sessionId = localStorage.getItem('chat_session_id');
+    if (!sessionId) {
+        sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('chat_session_id', sessionId);
+    }
+    
+    let waitingForContacts = false;
+    let lastQuestion = '';
+    
+    chatToggle.addEventListener('click', () => {
+        if (chatWindow.style.display === 'flex') {
+            chatWindow.style.display = 'none';
+        } else {
+            chatWindow.style.display = 'flex';
+            setTimeout(() => {
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 100);
+        }
+    });
+    
+    chatClose.addEventListener('click', () => {
+        chatWindow.style.display = 'none';
+    });
+    
+    function addMessage(text, isUser = false) {
+        const div = document.createElement('div');
+        div.style.display = 'flex';
+        div.style.marginBottom = '15px';
+        div.style.justifyContent = isUser ? 'flex-end' : 'flex-start';
+        
+        const bubble = document.createElement('div');
+        bubble.style.background = isUser ? '#007bff' : 'white';
+        bubble.style.color = isUser ? 'white' : '#333';
+        bubble.style.padding = '10px 15px';
+        bubble.style.borderRadius = '18px';
+        bubble.style.maxWidth = '80%';
+        bubble.style.wordWrap = 'break-word';
+        if (!isUser) {
+            bubble.style.borderBottomLeftRadius = '4px';
+            bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+        } else {
+            bubble.style.borderBottomRightRadius = '4px';
+        }
+        bubble.textContent = text;
+        
+        div.appendChild(bubble);
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function addTypingIndicator() {
+        const div = document.createElement('div');
+        div.id = 'typing-indicator';
+        div.style.display = 'flex';
+        div.style.marginBottom = '15px';
+        
+        const bubble = document.createElement('div');
+        bubble.style.background = 'white';
+        bubble.style.padding = '10px 15px';
+        bubble.style.borderRadius = '18px';
+        bubble.style.borderBottomLeftRadius = '4px';
+        bubble.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+        bubble.innerHTML = '<span style="opacity: 0.6;">•••</span>';
+        
+        div.appendChild(bubble);
+        chatMessages.appendChild(div);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+    
+    function removeTypingIndicator() {
+        const indicator = document.getElementById('typing-indicator');
+        if (indicator) indicator.remove();
+    }
+    
+    async function sendMessage(message, name = null, phone = null) {
+        addMessage(message, true);
+        chatInput.value = '';
+        
+        addTypingIndicator();
+        
+        try {
+            const response = await fetch('/api/chat/send', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    name: name,
+                    phone: phone,
+                    sessionId: sessionId
+                })
+            });
+            
+            const data = await response.json();
+            removeTypingIndicator();
+            
+            if (data.response) {
+                addMessage(data.response, false);
+                
+                if (data.needCall && !waitingForContacts) {
+                    waitingForContacts = true;
+                    lastQuestion = message;
+                    contactFields.style.display = 'block';
+                    addMessage('Пожалуйста, оставьте ваше имя и номер телефона, чтобы наш специалист мог связаться с вами для детальной консультации.', false);
+                }
+            } else if (data.error) {
+                addMessage('Извините, произошла ошибка. Пожалуйста, позвоните нам или попробуйте позже.', false);
+            }
+        } catch (err) {
+            removeTypingIndicator();
+            addMessage('Извините, не могу соединиться с сервером. Пожалуйста, попробуйте позже или позвоните нам.', false);
+        }
+    }
+    
+    chatSend.addEventListener('click', async () => {
+        const message = chatInput.value.trim();
+        if (!message) return;
+        
+        if (waitingForContacts) {
+            const name = userNameInput.value.trim();
+            const phone = userPhoneInput.value.trim();
+            
+            if (!name || !phone) {
+                addMessage('Пожалуйста, укажите ваше имя и номер телефона, чтобы специалист мог с вами связаться.', false);
+                return;
+            }
+            
+            waitingForContacts = false;
+            contactFields.style.display = 'none';
+            await sendMessage(lastQuestion, name, phone);
+        } else {
+            await sendMessage(message);
+        }
+    });
+    
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            chatSend.click();
+        }
+    });
+    
+    if (typeof lucide !== 'undefined') {
+        setInterval(() => lucide.createIcons(), 100);
+    }
+</script>
+
 </body>
 </html>

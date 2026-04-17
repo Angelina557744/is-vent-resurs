@@ -595,3 +595,72 @@ body {
         font-size: 16px !important;
     }
 }
+
+/* ========== ИИ-ЧАТ ПОМОЩНИК ========== */
+
+/* Кнопка чата */
+#chat-toggle {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+#chat-toggle:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+}
+
+/* Окно чата */
+#chat-window {
+    font-family: 'CascadiaCode', monospace;
+    transition: all 0.3s ease;
+}
+
+/* Скроллбар чата */
+#chat-messages::-webkit-scrollbar {
+    width: 5px;
+}
+
+#chat-messages::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 10px;
+}
+
+#chat-messages::-webkit-scrollbar-thumb {
+    background: #007bff;
+    border-radius: 10px;
+}
+
+/* Анимация появления */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#chat-window {
+    animation: fadeInUp 0.3s ease;
+}
+
+/* Адаптив для мобильных */
+@media (max-width: 480px) {
+    #chat-window {
+        width: calc(100vw - 40px);
+        right: 20px;
+        bottom: 80px;
+        height: 60vh;
+    }
+    
+    #chat-toggle {
+        width: 50px;
+        height: 50px;
+    }
+    
+    #chat-toggle i {
+        width: 24px;
+        height: 24px;
+    }
+}
