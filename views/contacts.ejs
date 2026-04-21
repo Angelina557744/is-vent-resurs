@@ -134,4 +134,78 @@ document.getElementById('contactQuestionForm').addEventListener('submit', async 
 });
 </script>
 
+<!-- Модальное уведомление -->
+<div id="notificationModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; max-width: 400px; width: 90%; padding: 30px; border-radius: 16px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div id="notificationIcon" style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px auto;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h3 id="notificationTitle" style="margin: 0 0 10px 0; font-size: 1.3rem;">Заголовок</h3>
+        <p id="notificationMessage" style="color: #666; margin-bottom: 20px; line-height: 1.5;">Текст уведомления</p>
+        <button onclick="closeNotification()" style="background: #007bff; color: white; border: none; padding: 10px 30px; border-radius: 30px; cursor: pointer; font-size: 0.9rem; font-weight: 600;">Закрыть</button>
+    </div>
+</div>
+
+<script>
+    function showNotification(type, title, message) {
+        const modal = document.getElementById('notificationModal');
+        const iconDiv = document.getElementById('notificationIcon');
+        const titleEl = document.getElementById('notificationTitle');
+        const messageEl = document.getElementById('notificationMessage');
+        
+        if (type === 'success') {
+            iconDiv.style.background = '#28a745';
+            titleEl.style.color = '#28a745';
+        } else if (type === 'error') {
+            iconDiv.style.background = '#dc3545';
+            titleEl.style.color = '#dc3545';
+        } else {
+            iconDiv.style.background = '#007bff';
+            titleEl.style.color = '#007bff';
+        }
+        
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        modal.style.display = 'flex';
+    }
+    
+    function closeNotification() {
+        document.getElementById('notificationModal').style.display = 'none';
+    }
+    
+    // Обновленная отправка формы
+    document.getElementById('contactQuestionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const data = {
+            name: document.getElementById('q_name').value,
+            phone: document.getElementById('q_phone').value,
+            email: document.getElementById('q_email').value,
+            message: document.getElementById('q_message').value
+        };
+        
+        try {
+            const res = await fetch('/api/contact-message', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            
+            const result = await res.json();
+            
+            if (result.success) {
+                showNotification('success', 'Сообщение отправлено', 'Ваш вопрос успешно отправлен. Ответ появится в личном кабинете.');
+                e.target.reset();
+            } else {
+                showNotification('error', 'Ошибка', result.error || 'Не удалось отправить сообщение. Попробуйте позже.');
+            }
+        } catch (err) {
+            console.error('Error:', err);
+            showNotification('error', 'Ошибка', 'Не удалось отправить сообщение. Проверьте соединение.');
+        }
+    });
+</script>
+
 <%- include('partials/footer') %>

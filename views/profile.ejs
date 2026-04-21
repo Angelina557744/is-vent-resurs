@@ -1014,8 +1014,6 @@ function disableEditMode() {
     document.getElementById('profile-message').innerHTML = '';
     lucide.createIcons();
 }
-
-// Сохранение профиля
 async function saveProfile(event) {
     event.preventDefault();
     
@@ -1037,13 +1035,15 @@ async function saveProfile(event) {
         
         if (result.success) {
             messageDiv.innerHTML = '<span style="color: #28a745;">✅ ' + result.message + '</span>';
-            // Обновляем отображаемые данные
+            // Обновляем отображаемые данные на странице
             document.getElementById('view-email').innerText = data.email;
             document.getElementById('view-phone').innerText = data.phone || 'Не указан';
-            // Через 1.5 секунды возвращаемся в режим просмотра
+            // Обновляем значения в форме редактирования
+            document.querySelector('input[name="email"]').value = data.email;
+            document.querySelector('input[name="phone"]').value = data.phone || '';
+            // Возвращаемся в режим просмотра через 1.5 секунды
             setTimeout(() => {
                 disableEditMode();
-                location.reload(); // Обновляем страницу для обновления имени и других данных
             }, 1500);
         } else {
             messageDiv.innerHTML = '<span style="color: #dc3545;">❌ ' + result.error + '</span>';

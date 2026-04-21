@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -49,15 +47,59 @@
                         <img src="/img/logo.png" alt="ВентРесурс" style="height: 50px; width: auto; display: block;">
                     </a>
                 </div>
-                <nav class="nav-menu">
+                
+                <!-- Бургер-кнопка -->
+                <button class="burger-menu" id="burgerBtn" aria-label="Меню">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                
+                <!-- Навигационное меню -->
+                <nav class="nav-menu" id="navMenu">
                     <a href="/">Главная</a>
                     <a href="/services">Услуги</a>
                     <a href="/projects">Наши работы</a>
                     <a href="/contacts">Контакты</a>
+                    <div class="mobile-auth">
+                        <% if (user) { %>
+                            <a href="/profile">Личный кабинет</a>
+                            <a href="/logout">Выйти</a>
+                        <% } else { %>
+                            <a href="/login">Войти</a>
+                            <a href="/register">Регистрация</a>
+                        <% } %>
+                    </div>
                 </nav>
+                
                 <div class="header-actions">
                     <a href="/services#callback-container" class="btn btn-blue" style="padding: 10px 20px; font-size: 0.8rem; text-decoration: none; display: inline-block; text-align: center;">Обратный звонок</a>
                 </div>
             </div>
         </div>
     </header>
+    
+    <script>
+        // Бургер-меню
+        document.addEventListener('DOMContentLoaded', function() {
+            const burgerBtn = document.getElementById('burgerBtn');
+            const navMenu = document.getElementById('navMenu');
+            
+            if (burgerBtn && navMenu) {
+                burgerBtn.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                    document.body.classList.toggle('menu-open');
+                });
+                
+                // Закрытие меню при клике на ссылку
+                navMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', function() {
+                        burgerBtn.classList.remove('active');
+                        navMenu.classList.remove('active');
+                        document.body.classList.remove('menu-open');
+                    });
+                });
+            }
+        });
+    </script>

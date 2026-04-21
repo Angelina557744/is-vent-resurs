@@ -95,7 +95,9 @@ function isAdmin(req, res, next) {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
     }
-    res.status(403).send('Доступ только для администраторов');
+    res.status(403).render('403', { 
+        title: 'Доступ запрещен | ВентРесурс'
+    });
 }
 
 function isAuth(req, res, next) {
@@ -337,7 +339,14 @@ app.post('/login', async (req, res) => {
 
         const user = users[0];
         if (await bcrypt.compare(password, user.password)) {
-            req.session.user = { id: user.id, username: user.username, full_name: user.full_name, role: user.role };
+            req.session.user = { 
+                id: user.id, 
+                username: user.username, 
+                full_name: user.full_name, 
+                role: user.role,
+                email: user.email,
+                phone: user.phone
+            };
             req.session.save(() => res.redirect(user.role === 'admin' ? '/admin' : '/profile'));
         } else {
             res.render('login', { title: 'Вход', error: 'Неверный пароль' });
@@ -389,15 +398,11 @@ const userId = req.session.user.id;
 app.get('/profile/quiz', isAuth, (req, res) => {
     res.render('quiz', { title: 'Подбор системы вентиляции' });
 });
-
-
-// Обновление профиля пользователя
 app.post('/api/profile/update', isAuth, async (req, res) => {
     const userId = req.session.user.id;
     const { email, phone, password } = req.body;
     
     try {
-        // Проверяем, не занят ли email другим пользователем
         if (email) {
             const [existing] = await db.query(
                 'SELECT id FROM users WHERE email = ? AND id != ?', 
@@ -411,7 +416,6 @@ app.post('/api/profile/update', isAuth, async (req, res) => {
         let query = 'UPDATE users SET email = ?, phone = ?';
         const params = [email, phone || null];
         
-        // Если ввели новый пароль - обновляем
         if (password && password.length >= 4) {
             const hashedPassword = await bcrypt.hash(password, 10);
             query += ', password = ?';
@@ -423,8 +427,9 @@ app.post('/api/profile/update', isAuth, async (req, res) => {
         
         await db.query(query, params);
         
-        // Обновляем email в сессии
+        // Обновляем данные в сессии
         req.session.user.email = email;
+        req.session.user.phone = phone || null;
         
         res.json({ success: true, message: 'Профиль успешно обновлен' });
         
@@ -433,7 +438,6 @@ app.post('/api/profile/update', isAuth, async (req, res) => {
         res.json({ success: false, error: 'Ошибка при обновлении профиля' });
     }
 });
-
 // Отключаем проверку SSL для GigaChat (временно)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
@@ -580,7 +584,7 @@ app.post('/api/quiz-save', isAuth, async (req, res) => {
 - Людей: ${people_count}
 - Бюджет: ${budget_range}
 - Автоматизация: ${automation === 'yes' ? 'нужна' : 'не нужна'}
-- Цена: ${estimated_price.toLocaleString()} руб.
+- - Цена (ориентировочная стоимость, рассчитанная нашим калькулятором): ${estimated_price.toLocaleString()} руб. НЕ ПЕРЕСЧИТЫВАЙ ЭТУ ЦЕНУ, используй её в ответе как есть.
 
 Напиши клиенту ответ от "ВентРесурс" по схеме:
 1. Приветствие ("Здравствуйте! Спасибо за обращение в ВентРесурс")
@@ -856,14 +860,13 @@ app.post('/admin/callbacks/update-status/:id', isAdmin, async (req, res) => {
     }
 });
 
-// Обработка формы контактов с классификацией через GigaChat
 app.post('/api/contact-message', async (req, res) => {
     const { name, email, phone, message } = req.body;
     
     // Валидация обязательных полей
     if (!name || !email || !message) {
         console.error('Ошибка: Не все обязательные поля заполнены');
-        return res.redirect('/contacts?error=1');
+        return res.status(400).json({ success: false, error: 'Заполните все обязательные поля' });
     }
     
     console.log('--- НОВОЕ СООБЩЕНИЕ ОТ ПОЛЬЗОВАТЕЛЯ ---');
@@ -875,9 +878,9 @@ app.post('/api/contact-message', async (req, res) => {
     // Вызываем классификацию через GigaChat
     try {
         category = await classifyMessageWithGigaChat(message);
-        console.log(`📊 Категория определена: ${category}`);
+        console.log(`Категория определена: ${category}`);
     } catch (err) {
-        console.error('❌ Классификация не удалась, используем категорию по умолчанию');
+        console.error('Классификация не удалась, используем категорию по умолчанию');
         category = 'Общее';
     }
     
@@ -887,12 +890,12 @@ app.post('/api/contact-message', async (req, res) => {
             'INSERT INTO contact_messages (name, email, phone, message, category, status) VALUES (?, ?, ?, ?, ?, ?)',
             [name, email, phone, message, category, 'new']
         );
-        console.log('💾 Сообщение сохранено в базу данных');
-        res.redirect('/contacts?success=1');
+        console.log('Сообщение сохранено в базу данных');
+        res.json({ success: true, message: 'Сообщение успешно отправлено' });
         
     } catch (dbErr) {
-        console.error('❌ Ошибка сохранения в БД:', dbErr.message);
-        res.redirect('/contacts?error=1');
+        console.error('Ошибка сохранения в БД:', dbErr.message);
+        res.status(500).json({ success: false, error: 'Ошибка сервера при сохранении' });
     }
 });
 
@@ -1230,7 +1233,7 @@ async function getBotResponse(userMessage) {
     const https = require('https');
     const agent = new https.Agent({ rejectUnauthorized: false });
     
-    const prompt = `Ты профессиональный консультант компании "ВентРесурс" - специалист по вентиляции и кондиционированию.
+    const prompt = `Ты профессиональный консультант компании "ВентРесурс" - являешься специалистом в области проектирования, поставки и монтажа инженерных систем для промышленности, включая вентиляцию, теплоснабжение, холодоснабжение и автоматизацию.
 
 Твои правила:
 1. Отвечай кратко и по делу (2-4 предложения)
