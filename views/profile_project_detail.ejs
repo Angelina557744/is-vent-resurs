@@ -1,0 +1,146 @@
+<%- include('partials/header') %>
+
+<main class="profile-main">
+    <div class="profile-container">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="/profile" style="background: #6c757d; color: white; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem;">
+                    ← Назад
+                </a>
+                <h1 style="margin: 0; font-size: 1.8rem;"><%= project.title %></h1>
+            </div>
+            <span style="display: inline-block; padding: 6px 16px; border-radius: 30px; font-size: 0.85rem; background: #e8f5e9; color: #2e7d32;">
+                <%= statuses[project.status]?.label || project.status %>
+            </span>
+        </div>
+        
+        <% if (success) { %>
+            <div style="background: #d4edda; color: #155724; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                <%= success %>
+            </div>
+        <% } %>
+        
+        <% if (error) { %>
+            <div style="background: #f8d7da; color: #721c24; padding: 12px; border-radius: 8px; margin-bottom: 20px;">
+                <%= error %>
+            </div>
+        <% } %>
+        
+        <!-- Прогресс-бар -->
+        <div style="background: white; border-radius: 16px; padding: 25px; margin-bottom: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span style="font-size: 0.85rem; color: #666;">Прогресс выполнения</span>
+                <span style="font-size: 0.85rem; color: var(--primary-blue); font-weight: 600;">
+                    <%= statuses[project.status]?.progress || 0 %>% завершено
+                </span>
+            </div>
+            <div style="background: #eee; border-radius: 10px; height: 8px; overflow: hidden;">
+                <div style="background: var(--primary-blue); width: <%= statuses[project.status]?.progress || 0 %>%; height: 100%; border-radius: 10px;"></div>
+            </div>
+            <div style="margin-top: 15px;">
+                <div style="font-size: 0.8rem; color: #888;">Адрес объекта:</div>
+                <div style="font-size: 1rem; margin-top: 5px;"><%= project.address || 'Не указан' %></div>
+            </div>
+        </div>
+        
+        <!-- Чат по проекту -->
+        <div style="background: white; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); padding: 20px 25px; border-bottom: 1px solid #d0e3ff;">
+                <h3 style="margin: 0; color: var(--primary-blue); display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="message-circle"></i> Переписка по проекту
+                </h3>
+            </div>
+            <div style="padding: 25px;">
+                <div id="chatMessages" style="max-height: 400px; overflow-y: auto; margin-bottom: 20px; padding: 15px; background: #fafafa; border-radius: 12px;">
+                    <% if (messages && messages.length > 0) { %>
+                        <% messages.forEach(msg => { %>
+                            <div style="margin-bottom: 15px; text-align: <%= msg.is_admin ? 'left' : 'right' %>;">
+                                <div style="display: inline-block; max-width: 80%; background: <%= msg.is_admin ? '#e9ecef' : 'var(--primary-blue)' %>; color: <%= msg.is_admin ? '#333' : 'white' %>; padding: 12px 18px; border-radius: 18px; text-align: left;">
+                                    <div style="font-size: 0.75rem; font-weight: bold; margin-bottom: 5px;">
+                                        <%= msg.is_admin ? 'Администратор' : 'Вы' %>
+                                    </div>
+                                    <div style="font-size: 0.9rem;"><%= msg.message %></div>
+                                    <div style="font-size: 0.65rem; margin-top: 8px; opacity: 0.7;">
+                                        <%= new Date(msg.created_at).toLocaleString('ru-RU') %>
+                                    </div>
+                                </div>
+                            </div>
+                        <% }) %>
+                    <% } else { %>
+                        <div style="text-align: center; color: #999; padding: 30px;">
+                            Сообщений пока нет. Напишите первое сообщение администратору.
+                        </div>
+                    <% } %>
+                </div>
+                
+                <form action="/profile/projects/<%= project.id %>/message" method="POST">
+                    <textarea name="message" rows="3" placeholder="Введите ваше сообщение..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 12px; resize: vertical; font-family: 'CascadiaCode', monospace; margin-bottom: 10px;" required></textarea>
+                    <button type="submit" class="profile-quiz-button" style="padding: 10px 25px;">Отправить сообщение</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Фото выполненных работ -->
+        <% if (photos && photos.length > 0) { %>
+            <div style="background: white; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); padding: 20px 25px; border-bottom: 1px solid #d0e3ff;">
+                    <h3 style="margin: 0; color: var(--primary-blue); display: flex; align-items: center; gap: 10px;">
+                        <i data-lucide="image"></i> Фото выполненных работ
+                    </h3>
+                </div>
+                <div style="padding: 25px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px;">
+                        <% photos.forEach(photo => { %>
+                            <div style="border: 1px solid #eee; border-radius: 10px; overflow: hidden;">
+                                <img src="/<%= photo.image_url %>" alt="Фото работ" style="width: 100%; height: 150px; object-fit: cover; cursor: pointer;" onclick="window.open('/<%= photo.image_url %>', '_blank')">
+                                <div style="padding: 10px; font-size: 0.75rem; color: #666; background: #fafafa;">
+                                    <%= photo.description || 'Фото работ' %>
+                                </div>
+                            </div>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+        
+        <!-- Документы -->
+        <% if (documents && documents.length > 0) { %>
+            <div style="background: white; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); margin-bottom: 30px; overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%); padding: 20px 25px; border-bottom: 1px solid #d0e3ff;">
+                    <h3 style="margin: 0; color: var(--primary-blue); display: flex; align-items: center; gap: 10px;">
+                        <i data-lucide="file-text"></i> Документы по проекту
+                    </h3>
+                </div>
+                <div style="padding: 25px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <% documents.forEach(doc => { %>
+                            <a href="/<%= doc.file_url %>" download style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; background: #f8f9fa; border-radius: 8px; text-decoration: none; transition: 0.3s;">
+                                <div>
+                                    <i data-lucide="file" style="width: 20px; height: 20px; color: var(--primary-blue); vertical-align: middle;"></i>
+                                    <span style="margin-left: 10px; color: #333;"><%= doc.title %></span>
+                                </div>
+                                <button style="background: var(--primary-blue); color: white; border: none; padding: 5px 15px; border-radius: 6px; cursor: pointer; transition: 0.3s;" onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">Скачать</button>
+                            </a>
+                        <% }) %>
+                    </div>
+                </div>
+            </div>
+        <% } %>
+        
+    </div>
+</main>
+
+<script>
+    // Прокрутка чата вниз
+    const chatContainer = document.getElementById('chatMessages');
+    if (chatContainer) {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+</script>
+
+<%- include('partials/footer') %>

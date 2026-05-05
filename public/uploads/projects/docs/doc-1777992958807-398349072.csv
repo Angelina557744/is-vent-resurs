@@ -1,0 +1,7 @@
+id,username,full_name,email,phone,password,role,created_at,is_blocked
+1,admin,"Главный Администратор",admin@mail.ru,NULL,$2b$10$637BwwuB4Q7Jt.oAXDijbuYBNWliCuyLr1P763a8/DNnNg3sdGXeO,admin,"2026-03-13 21:11:23",0
+2,ktoto,Кто-то,kto@mail.ru,NULL,$2b$10$djhmqYSK/R/8Q2QsUMVkdurTqHLyc.YinIpyN6oZ7NLuZuf4wQGyu,user,"2026-03-15 22:47:25",0
+3,angelina,"Парфенова Ангелина Петровна",ang@mail.ru,NULL,$2b$10$saYOVo7/7z80BfnT4NbLbeW9rSUE.4l84tClPx6pXv8W7gv6I.40q,user,"2026-03-17 12:31:42",0
+4,angg,Ангелина,ang@mail,NULL,$2b$10$FJa4otUTqNana2ux34S5KuTW1uFaHyeflAuC6mKEh6ri1OKhNpISu,user,"2026-03-18 17:34:33",0
+5,testuser123,"Тестовый Пользователь",testuser123@mail.ru,"+7 999 888 77 66",$2b$10$FOLyJqkOVtwIJtXE5zr9nuj2g0psy01Yjd09LdRbIJjF.q17Nexky,user,"2026-04-21 15:50:18",0
+6,new,"Новый пользователь",new@mail.ru,NULL,$2b$10$V6.u2R.aZ0eogur54MjpR.VKHEO2u1bA5HhIlbZI9Rma7uj/QpRiS,user,"2026-04-21 20:11:03",0

@@ -135,7 +135,7 @@ app.get('/services', async (req, res) => {
     }
 });
 
-// Страница отдельной услуги
+
 // Страница отдельной услуги
 app.get('/services/:id', async (req, res) => {
     try {
@@ -383,11 +383,20 @@ const userId = req.session.user.id;
             [userData.email]
         );
 
+        const [userProjects] = await db.query(`
+    SELECT p.*, s.title as service_title
+    FROM user_projects p
+    LEFT JOIN services s ON p.service_id = s.id
+    WHERE p.user_id = ?
+    ORDER BY p.created_at DESC
+`, [userId]);
+
         res.render('profile', { 
             title: 'Личный кабинет | ВентРесурс',
             user: req.session.user,
             quizResults: quizResults,
-            notifications: userMessages // Передаем ответы как уведомления
+            notifications: userMessages,
+            userProjects: userProjects
         });
     } catch (err) {
         console.error(err);
@@ -685,9 +694,12 @@ app.get('/admin', isAdmin, async (req, res) => {
         // Безопасное получение счетчиков
         const [sRes] = await db.query('SELECT COUNT(*) as count FROM services');
         const [cRes] = await db.query('SELECT COUNT(*) as count FROM callbacks');
-        const [pRes] = await db.query('SELECT COUNT(*) as count FROM projects');
+        const [pRes] = await db.query('SELECT COUNT(*) as count FROM projects'); // старые проекты (портфолио)
         const [uRes] = await db.query('SELECT COUNT(*) as count FROM users');
         const [mRes] = await db.query('SELECT COUNT(*) as count FROM contact_messages');
+        
+        // НОВОЕ: получаем количество проектов клиентов из таблицы user_projects
+        const [upRes] = await db.query('SELECT COUNT(*) as count FROM user_projects');
 
         // Безопасный запрос квизов (LEFT JOIN не даст ошибку, если пользователь удален)
         const [recentQuiz] = await db.query(`
@@ -703,15 +715,15 @@ app.get('/admin', isAdmin, async (req, res) => {
             stats: {
                 services: sRes[0]?.count || 0,
                 callbacks: cRes[0]?.count || 0,
-                projects: pRes[0]?.count || 0,
+                projects: pRes[0]?.count || 0,      // портфолио (наши работы)
                 users: uRes[0]?.count || 0,
-                messages: mRes[0]?.count || 0
+                messages: mRes[0]?.count || 0,
+                userProjects: upRes[0]?.count || 0   // НОВОЕ: проекты клиентов
             },
-            recentQuiz: recentQuiz || [] // Гарантируем, что это массив
+            recentQuiz: recentQuiz || []
         });
     } catch (err) {
         console.error("КРИТИЧЕСКАЯ ОШИБКА АДМИНКИ:", err);
-        // Выводим текст ошибки прямо на экран, чтобы вы поняли, какой таблицы не хватает
         res.status(500).send(`Ошибка базы данных: ${err.message}`);
     }
 });
@@ -1347,6 +1359,573 @@ app.get('/admin/chat', isAdmin, async (req, res) => {
     } catch (err) {
         console.error('Ошибка:', err);
         res.status(500).send('Ошибка загрузки');
+    }
+});
+
+
+
+
+// ========== УПРАВЛЕНИЕ ПРОЕКТАМИ (АДМИН) ==========
+
+// Список всех проектов
+app.get('/admin/user-projects', isAdmin, async (req, res) => {
+    try {
+        const [projects] = await db.query(`
+            SELECT p.*, u.full_name as user_name, u.email as user_email, s.title as service_title
+            FROM user_projects p
+            LEFT JOIN users u ON p.user_id = u.id
+            LEFT JOIN services s ON p.service_id = s.id
+            ORDER BY p.created_at DESC
+        `);
+        
+        // Статистика по статусам
+        const [stats] = await db.query(`
+            SELECT status, COUNT(*) as count FROM user_projects GROUP BY status
+        `);
+        
+        const statusStats = {};
+        stats.forEach(s => { statusStats[s.status] = s.count; });
+        
+        res.render('admin/user_projects', {
+            title: 'Проекты клиентов | Админ',
+            projects: projects,
+            stats: statusStats,
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки проектов');
+    }
+});
+
+// Страница создания проекта (выбор пользователя)
+app.get('/admin/user-projects/create', isAdmin, async (req, res) => {
+    try {
+        const [users] = await db.query('SELECT id, full_name, email FROM users ORDER BY full_name');
+        const [services] = await db.query('SELECT id, title FROM services ORDER BY title');
+        
+        res.render('admin/user_project_create', {
+            title: 'Создание проекта | Админ',
+            users: users,
+            services: services,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
+
+// Создание проекта
+app.post('/admin/user-projects/create', isAdmin, async (req, res) => {
+    const { user_id, service_id, title, address, status } = req.body;
+    
+    if (!user_id || !title) {
+        return res.redirect('/admin/user-projects/create?error=Заполните обязательные поля');
+    }
+    
+    try {
+        await db.query(
+            `INSERT INTO user_projects (user_id, service_id, title, address, status) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [user_id, service_id || null, title, address || null, status || 'approved']
+        );
+        res.redirect('/admin/user-projects?success=Проект создан');
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect('/admin/user-projects/create?error=Ошибка при создании');
+    }
+});
+
+// Детальная страница проекта (админ)
+app.get('/admin/user-projects/:id', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    
+    try {
+        // Данные проекта
+        const [projects] = await db.query(`
+            SELECT p.*, u.full_name as user_name, u.email as user_email, u.phone as user_phone, s.title as service_title
+            FROM user_projects p
+            LEFT JOIN users u ON p.user_id = u.id
+            LEFT JOIN services s ON p.service_id = s.id
+            WHERE p.id = ?
+        `, [projectId]);
+        
+        if (projects.length === 0) {
+            return res.status(404).send('Проект не найден');
+        }
+        
+        const project = projects[0];
+        
+        // Сообщения чата
+        const [messages] = await db.query(`
+            SELECT m.*, u.full_name as user_name
+            FROM project_messages m
+            LEFT JOIN users u ON m.user_id = u.id
+            WHERE m.project_id = ?
+            ORDER BY m.created_at ASC
+        `, [projectId]);
+        
+        // Фото
+        const [photos] = await db.query(
+            'SELECT * FROM project_photos WHERE project_id = ? ORDER BY created_at DESC',
+            [projectId]
+        );
+        
+        // Документы
+        const [documents] = await db.query(
+            'SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC',
+            [projectId]
+        );
+        
+        // Статусы для выпадающего списка
+        const statuses = [
+            { value: 'awaiting_approval', label: 'Ожидание одобрения' },
+            { value: 'approved', label: 'Одобрено' },
+            { value: 'design', label: 'Проектирование' },
+            { value: 'supply', label: 'Поставка оборудования' },
+            { value: 'installation', label: 'Монтажные работы' },
+            { value: 'commissioning', label: 'Пусконаладка' },
+            { value: 'completed', label: 'Работы завершены' }
+        ];
+        
+        res.render('admin/user_project_detail', {
+            title: `Проект: ${project.title} | Админ`,
+            project: project,
+            messages: messages,
+            photos: photos,
+            documents: documents,
+            statuses: statuses,
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки проекта');
+    }
+});
+
+// Обновление статуса проекта
+app.post('/admin/user-projects/:id/status', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    const { status } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE user_projects SET status = ? WHERE id = ?',
+            [status, projectId]
+        );
+        res.redirect(`/admin/user-projects/${projectId}?success=Статус обновлен`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка`);
+    }
+});
+
+// Обновление названия и адреса проекта
+app.post('/admin/user-projects/:id/update', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    const { title, address, service_id } = req.body;
+    
+    try {
+        await db.query(
+            'UPDATE user_projects SET title = ?, address = ?, service_id = ? WHERE id = ?',
+            [title, address || null, service_id || null, projectId]
+        );
+        res.redirect(`/admin/user-projects/${projectId}?success=Данные обновлены`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка`);
+    }
+});
+
+// Добавление сообщения от админа
+app.post('/admin/user-projects/:id/message', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    const { message } = req.body;
+    const adminId = req.session.user.id;
+    
+    if (!message) {
+        return res.redirect(`/admin/user-projects/${projectId}?error=Введите сообщение`);
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO project_messages (project_id, user_id, message, is_admin) VALUES (?, ?, ?, ?)',
+            [projectId, adminId, message, 1]
+        );
+        res.redirect(`/admin/user-projects/${projectId}?success=Сообщение отправлено`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка`);
+    }
+});
+
+
+
+// Создаем папку для фото проектов, если её нет
+const projectPhotosDir = 'public/uploads/projects';
+if (!fs.existsSync(projectPhotosDir)) {
+    fs.mkdirSync(projectPhotosDir, { recursive: true });
+}
+
+const projectPhotoStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, projectPhotosDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, 'project-' + uniqueSuffix + '.jpg');
+    }
+});
+const uploadProjectPhoto = multer({ storage: projectPhotoStorage });
+
+app.post('/admin/user-projects/:id/photo', isAdmin, uploadProjectPhoto.single('photo'), async (req, res) => {
+    const projectId = req.params.id;
+    
+    if (!req.file) {
+        return res.redirect(`/admin/user-projects/${projectId}?error=Выберите фото`);
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO project_photos (project_id, image_url, description) VALUES (?, ?, ?)',
+            [projectId, 'uploads/projects/' + req.file.filename, req.body.description || null]
+        );
+        res.redirect(`/admin/user-projects/${projectId}?success=Фото добавлено`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка`);
+    }
+});
+
+// Удаление фото
+app.post('/admin/user-projects/photo/:photoId/delete', isAdmin, async (req, res) => {
+    const photoId = req.params.photoId;
+    
+    try {
+        const [photos] = await db.query('SELECT * FROM project_photos WHERE id = ?', [photoId]);
+        if (photos.length > 0) {
+            const filePath = 'public/' + photos[0].image_url;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        await db.query('DELETE FROM project_photos WHERE id = ?', [photoId]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.json({ success: false });
+    }
+});
+
+// Загрузка документа
+const projectDocsDir = 'public/uploads/projects/docs';
+if (!fs.existsSync(projectDocsDir)) {
+    fs.mkdirSync(projectDocsDir, { recursive: true });
+}
+
+const projectDocStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, projectDocsDir);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const ext = file.originalname.split('.').pop();
+        cb(null, 'doc-' + uniqueSuffix + '.' + ext);
+    }
+});
+const uploadProjectDoc = multer({ storage: projectDocStorage });
+
+app.post('/admin/user-projects/:id/document', isAdmin, uploadProjectDoc.single('document'), async (req, res) => {
+    const projectId = req.params.id;
+    const { title } = req.body;
+    
+    if (!req.file) {
+        return res.redirect(`/admin/user-projects/${projectId}?error=Выберите файл`);
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO project_documents (project_id, title, file_url, file_size, uploaded_by) VALUES (?, ?, ?, ?, ?)',
+            [projectId, title || req.file.originalname, 'uploads/projects/docs/' + req.file.filename, req.file.size, 'admin']
+        );
+        res.redirect(`/admin/user-projects/${projectId}?success=Документ добавлен`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка`);
+    }
+});
+
+// Удаление документа
+app.post('/admin/user-projects/document/:docId/delete', isAdmin, async (req, res) => {
+    const docId = req.params.docId;
+    
+    try {
+        const [docs] = await db.query('SELECT * FROM project_documents WHERE id = ?', [docId]);
+        if (docs.length > 0) {
+            const filePath = 'public/' + docs[0].file_url;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        await db.query('DELETE FROM project_documents WHERE id = ?', [docId]);
+        res.json({ success: true });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.json({ success: false });
+    }
+});
+
+// Удаление проекта
+app.post('/admin/user-projects/:id/delete', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    
+    try {
+        // Удаляем файлы фото
+        const [photos] = await db.query('SELECT * FROM project_photos WHERE project_id = ?', [projectId]);
+        for (const photo of photos) {
+            const filePath = 'public/' + photo.image_url;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        
+        // Удаляем файлы документов
+        const [docs] = await db.query('SELECT * FROM project_documents WHERE project_id = ?', [projectId]);
+        for (const doc of docs) {
+            const filePath = 'public/' + doc.file_url;
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        
+        // Удаляем проект (каскадно удалит сообщения, фото, документы)
+        await db.query('DELETE FROM user_projects WHERE id = ?', [projectId]);
+        
+        res.redirect('/admin/user-projects?success=Проект удален');
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/user-projects/${projectId}?error=Ошибка при удалении`);
+    }
+});
+
+
+// ========== ПРОЕКТЫ КЛИЕНТА (ЛИЧНЫЙ КАБИНЕТ) ==========
+
+// Страница детального просмотра проекта
+app.get('/profile/projects/:id', isAuth, async (req, res) => {
+    const projectId = req.params.id;
+    const userId = req.session.user.id;
+    
+    try {
+        // Проверяем, что проект принадлежит текущему пользователю
+        const [projects] = await db.query(`
+            SELECT p.*, s.title as service_title
+            FROM user_projects p
+            LEFT JOIN services s ON p.service_id = s.id
+            WHERE p.id = ? AND p.user_id = ?
+        `, [projectId, userId]);
+        
+        if (projects.length === 0) {
+            return res.status(404).send('Проект не найден или доступ запрещен');
+        }
+        
+        const project = projects[0];
+        
+        // Сообщения по проекту
+        const [messages] = await db.query(`
+            SELECT m.*, 
+                   CASE WHEN m.is_admin = 1 THEN 'Администратор' ELSE ? END as author_name
+            FROM project_messages m
+            WHERE m.project_id = ?
+            ORDER BY m.created_at ASC
+        `, [req.session.user.full_name, projectId]);
+        
+        // Фото по проекту
+        const [photos] = await db.query(
+            'SELECT * FROM project_photos WHERE project_id = ? ORDER BY created_at DESC',
+            [projectId]
+        );
+        
+        // Документы по проекту
+        const [documents] = await db.query(
+            'SELECT * FROM project_documents WHERE project_id = ? ORDER BY created_at DESC',
+            [projectId]
+        );
+        
+        // Статусы для отображения
+        const statuses = {
+            'awaiting_approval': { label: 'Ожидание одобрения', progress: 0 },
+            'approved': { label: 'Заявка одобрена', progress: 10 },
+            'design': { label: 'Проектирование', progress: 25 },
+            'supply': { label: 'Поставка оборудования', progress: 45 },
+            'installation': { label: 'Монтажные работы', progress: 70 },
+            'commissioning': { label: 'Пусконаладка', progress: 85 },
+            'completed': { label: 'Работы завершены', progress: 100 }
+        };
+        
+        res.render('profile_project_detail', {
+            title: `${project.title} | ВентРесурс`,
+            project: project,
+            messages: messages,
+            photos: photos,
+            documents: documents,
+            statuses: statuses,
+            user: req.session.user,
+            success: req.query.success,  // <-- ДОБАВИТЬ
+            error: req.query.error        // <-- ДОБАВИТЬ
+        });
+        
+    } catch (err) {
+        console.error('Ошибка загрузки проекта:', err);
+        res.status(500).send('Ошибка загрузки страницы');
+    }
+});
+
+// Отправка сообщения по проекту от клиента
+app.post('/profile/projects/:id/message', isAuth, async (req, res) => {
+    const projectId = req.params.id;
+    const userId = req.session.user.id;
+    const { message } = req.body;
+    
+    if (!message) {
+        return res.redirect(`/profile/projects/${projectId}?error=Введите сообщение`);
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO project_messages (project_id, user_id, message, is_admin) VALUES (?, ?, ?, ?)',
+            [projectId, userId, message, 0]
+        );
+        res.redirect(`/profile/projects/${projectId}?success=Сообщение отправлено`);
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/profile/projects/${projectId}?error=Ошибка`);
+    }
+});
+
+// ========== УПРАВЛЕНИЕ ЗАЯВКАМИ НА УСЛУГИ (АДМИН) ==========
+
+// Список заявок на услуги
+app.get('/admin/service-orders', isAdmin, async (req, res) => {
+    try {
+        const [orders] = await db.query(`
+            SELECT so.*, u.full_name as user_name, u.email as user_email
+            FROM service_orders so
+            LEFT JOIN users u ON so.user_id = u.id
+            ORDER BY so.created_at DESC
+        `);
+        
+        res.render('admin/service_orders', {
+            title: 'Заявки на услуги | Админ',
+            orders: orders,
+            success: req.query.success,
+            error: req.query.error
+        });
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки заявок');
+    }
+});
+
+// Одобрение заявки и создание проекта
+app.post('/admin/service-orders/:id/approve', isAdmin, async (req, res) => {
+    const orderId = req.params.id;
+    
+    try {
+        // Получаем данные заявки
+        const [orders] = await db.query('SELECT * FROM service_orders WHERE id = ?', [orderId]);
+        if (orders.length === 0) {
+            return res.redirect('/admin/service-orders?error=Заявка не найдена');
+        }
+        
+        const order = orders[0];
+        
+        // Проверяем, не создан ли уже проект для этой заявки
+        if (order.project_id) {
+            return res.redirect('/admin/service-orders?error=Проект для этой заявки уже создан');
+        }
+        
+        // Ищем пользователя по email
+        let userId = order.user_id;
+        
+        if (!userId) {
+            // Пытаемся найти пользователя по email из заявки
+            const [users] = await db.query('SELECT id FROM users WHERE email = ?', [order.email]);
+            
+            if (users.length > 0) {
+                // Пользователь найден
+                userId = users[0].id;
+            } else {
+                // Создаем нового пользователя
+                const username = order.email.split('@')[0] + '_' + Date.now();
+                const hashedPassword = await bcrypt.hash('user123456', 10);
+                
+                const [result] = await db.query(
+                    'INSERT INTO users (username, full_name, email, phone, password, role) VALUES (?, ?, ?, ?, ?, ?)',
+                    [username, order.name, order.email, order.phone, hashedPassword, 'user']
+                );
+                userId = result.insertId;
+            }
+        }
+        
+        // Создаем проект
+        const projectTitle = `${order.service_title} - ${order.name}`;
+        
+        const [projectResult] = await db.query(
+            `INSERT INTO user_projects (user_id, service_id, title, address, status, created_at) 
+             VALUES (?, ?, ?, ?, 'approved', NOW())`,
+            [userId, order.service_id, projectTitle, null]
+        );
+        
+        const projectId = projectResult.insertId;
+        
+        // Обновляем заявку: ставим статус approved и связываем с проектом
+        await db.query(
+            'UPDATE service_orders SET status = "approved", project_id = ? WHERE id = ?',
+            [projectId, orderId]
+        );
+        
+        // Добавляем приветственное сообщение в чат проекта
+        await db.query(
+            `INSERT INTO project_messages (project_id, user_id, message, is_admin, created_at) 
+             VALUES (?, ?, ?, ?, NOW())`,
+            [projectId, userId, `Здравствуйте! Ваша заявка на услугу "${order.service_title}" одобрена. Проект создан. Наш специалист свяжется с вами для уточнения деталей.`, 1]
+        );
+        
+        res.redirect(`/admin/service-orders?success=Заявка одобрена, проект #${projectId} создан`);
+        
+    } catch (err) {
+        console.error('Ошибка одобрения заявки:', err);
+        res.redirect('/admin/service-orders?error=Ошибка при одобрении');
+    }
+});
+
+// Отклонение заявки
+app.post('/admin/service-orders/:id/reject', isAdmin, async (req, res) => {
+    const orderId = req.params.id;
+    
+    try {
+        await db.query('UPDATE service_orders SET status = "rejected" WHERE id = ?', [orderId]);
+        res.redirect('/admin/service-orders?success=Заявка отклонена');
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect('/admin/service-orders?error=Ошибка');
+    }
+});
+
+// Удаление заявки
+app.post('/admin/service-orders/:id/delete', isAdmin, async (req, res) => {
+    const orderId = req.params.id;
+    
+    try {
+        await db.query('DELETE FROM service_orders WHERE id = ?', [orderId]);
+        res.redirect('/admin/service-orders?success=Заявка удалена');
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect('/admin/service-orders?error=Ошибка');
     }
 });
 
