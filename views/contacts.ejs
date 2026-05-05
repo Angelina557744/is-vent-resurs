@@ -175,37 +175,6 @@ document.getElementById('contactQuestionForm').addEventListener('submit', async 
         document.getElementById('notificationModal').style.display = 'none';
     }
     
-    // Обновленная отправка формы
-    document.getElementById('contactQuestionForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const data = {
-            name: document.getElementById('q_name').value,
-            phone: document.getElementById('q_phone').value,
-            email: document.getElementById('q_email').value,
-            message: document.getElementById('q_message').value
-        };
-        
-        try {
-            const res = await fetch('/api/contact-message', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(data)
-            });
-            
-            const result = await res.json();
-            
-            if (result.success) {
-                showNotification('success', 'Сообщение отправлено', 'Ваш вопрос успешно отправлен. Ответ появится в личном кабинете.');
-                e.target.reset();
-            } else {
-                showNotification('error', 'Ошибка', result.error || 'Не удалось отправить сообщение. Попробуйте позже.');
-            }
-        } catch (err) {
-            console.error('Error:', err);
-            showNotification('error', 'Ошибка', 'Не удалось отправить сообщение. Проверьте соединение.');
-        }
-    });
 </script>
 
 <%- include('partials/footer') %>
