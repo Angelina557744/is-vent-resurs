@@ -1,0 +1,77 @@
+<%- include('partials/header') %>
+
+<section class="project-detail-hero">
+    <div class="container">
+        <div class="project-detail-breadcrumb">
+            <a href="/projects">Наши работы</a>
+            <span>/</span>
+            <span><%= project.year %></span>
+        </div>
+        <h1 class="project-detail-title"><%= project.title %></h1>
+    </div>
+</section>
+
+<% if (projectDetail) { %>
+<section class="project-detail-description">
+    <div class="container">
+        <div class="project-detail-content">
+            <h2>О проекте</h2>
+            <div class="project-detail-text">
+    <%- projectDetail.description %>
+</div>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<% if (timeline && timeline.length > 0) { %>
+<section class="project-detail-timeline">
+    <div class="container">
+        <h2>Хронология работ</h2>
+        <div class="timeline-grid">
+            <% timeline.forEach(item => { %>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date"><%= item.month_date %></div>
+                        <% if (item.title) { %>
+                            <h3 class="timeline-title"><%= item.title %></h3>
+                        <% } %>
+                        <div class="timeline-text"><%= item.content %></div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<% if (photos && photos.length > 0) { %>
+<section class="project-detail-gallery">
+    <div class="container">
+        <h2>Фотогалерея объекта</h2>
+        <div class="project-gallery-grid">
+            <% photos.forEach(photo => { %>
+                <div class="gallery-item">
+                    <img src="/img/<%= photo.image_url %>" alt="<%= photo.title || 'Фото проекта' %>" loading="lazy">
+                    <% if (photo.title) { %>
+                        <div class="gallery-caption"><%= photo.title %></div>
+                    <% } %>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</section>
+<% } %>
+
+<section class="project-detail-cta">
+    <div class="container">
+        <div class="cta-block">
+            <h3>Хотите реализовать похожий проект?</h3>
+            <p>Свяжитесь с нами для консультации</p>
+            <a href="/contacts" class="btn-cta">Связаться</a>
+        </div>
+    </div>
+</section>
+
+<%- include('partials/footer') %>

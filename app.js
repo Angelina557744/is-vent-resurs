@@ -1929,6 +1929,241 @@ app.post('/admin/service-orders/:id/delete', isAdmin, async (req, res) => {
     }
 });
 
+// Страница детального просмотра проекта
+app.get('/projects/:year/:slug', async (req, res) => {
+    const { year, slug } = req.params;
+    
+    try {
+        const [projects] = await db.query(
+            'SELECT * FROM projects WHERE year = ? AND slug = ?',
+            [year, slug]
+        );
+        
+        if (projects.length === 0) {
+            return res.status(404).render('404', { title: 'Проект не найден' });
+        }
+        
+        const project = projects[0];
+        
+        const [details] = await db.query(
+            'SELECT * FROM project_details WHERE project_id = ?',
+            [project.id]
+        );
+        
+        const projectDetail = details[0] || null;
+        
+        let timeline = [];
+        let photos = [];
+        
+        if (projectDetail) {
+            [timeline] = await db.query(
+                'SELECT * FROM project_timeline WHERE project_detail_id = ? ORDER BY display_order ASC',
+                [projectDetail.id]
+            );
+            
+            [photos] = await db.query(
+                'SELECT * FROM project_detail_photos WHERE project_detail_id = ? ORDER BY display_order ASC',
+                [projectDetail.id]
+            );
+        }
+        
+        res.render('project_detail', {
+            title: `${project.title} | ВентРесурс`,
+            project: project,
+            projectDetail: projectDetail,
+            timeline: timeline,
+            photos: photos,
+            user: req.session.user || null
+        });
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки проекта');
+    }
+});
+
+// Админ: управление детальным проектом
+app.get('/admin/projects/:id/detail', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    
+    try {
+        const [projects] = await db.query('SELECT * FROM projects WHERE id = ?', [projectId]);
+        if (projects.length === 0) {
+            return res.status(404).send('Проект не найден');
+        }
+        
+        const project = projects[0];
+        
+        let [details] = await db.query('SELECT * FROM project_details WHERE project_id = ?', [projectId]);
+        let projectDetail = details[0] || null;
+        
+        let timeline = [];
+        let photos = [];
+        
+        if (projectDetail) {
+            [timeline] = await db.query(
+                'SELECT * FROM project_timeline WHERE project_detail_id = ? ORDER BY display_order ASC',
+                [projectDetail.id]
+            );
+            
+            [photos] = await db.query(
+                'SELECT * FROM project_detail_photos WHERE project_detail_id = ? ORDER BY display_order ASC',
+                [projectDetail.id]
+            );
+        }
+        
+        res.render('admin/project_detail_edit', {
+            title: `Редактирование: ${project.title} | Админ`,
+            project: project,
+            projectDetail: projectDetail,
+            timeline: timeline,
+            photos: photos,
+            success: req.query.success,
+            error: req.query.error
+        });
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка загрузки');
+    }
+});
+
+// Админ: сохранение/обновление детального описания
+app.post('/admin/projects/:id/detail/save', isAdmin, async (req, res) => {
+    const projectId = req.params.id;
+    const { description, year, title } = req.body;
+    
+    try {
+        const [existing] = await db.query(
+            'SELECT id FROM project_details WHERE project_id = ?',
+            [projectId]
+        );
+        
+        if (existing.length > 0) {
+            await db.query(
+                'UPDATE project_details SET description = ?, year = ?, title = ? WHERE project_id = ?',
+                [description, year, title, projectId]
+            );
+        } else {
+            await db.query(
+                'INSERT INTO project_details (project_id, year, title, description) VALUES (?, ?, ?, ?)',
+                [projectId, year, title, description]
+            );
+        }
+        
+        res.redirect(`/admin/projects/${projectId}/detail?success=1`);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect(`/admin/projects/${projectId}/detail?error=1`);
+    }
+});
+
+// Админ: добавление события в таймлайн
+app.post('/admin/projects/timeline/add', isAdmin, async (req, res) => {
+    const { project_detail_id, month_date, title, content, display_order } = req.body;
+    
+    try {
+        await db.query(
+            'INSERT INTO project_timeline (project_detail_id, month_date, title, content, display_order) VALUES (?, ?, ?, ?, ?)',
+            [project_detail_id, month_date, title || null, content, display_order || 0]
+        );
+        
+        const [detail] = await db.query('SELECT project_id FROM project_details WHERE id = ?', [project_detail_id]);
+        res.redirect(`/admin/projects/${detail[0].project_id}/detail?success=2`);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка добавления события');
+    }
+});
+
+// Админ: удаление события из таймлайна
+app.post('/admin/projects/timeline/:id/delete', isAdmin, async (req, res) => {
+    const timelineId = req.params.id;
+    
+    try {
+        const [timeline] = await db.query('SELECT project_detail_id FROM project_timeline WHERE id = ?', [timelineId]);
+        const [detail] = await db.query('SELECT project_id FROM project_details WHERE id = ?', [timeline[0].project_detail_id]);
+        
+        await db.query('DELETE FROM project_timeline WHERE id = ?', [timelineId]);
+        
+        res.redirect(`/admin/projects/${detail[0].project_id}/detail?success=3`);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка удаления');
+    }
+});
+
+// Админ: добавление фото
+app.post('/admin/projects/photos/add', isAdmin, upload.single('image'), async (req, res) => {
+    const { project_detail_id, title, description, display_order } = req.body;
+    
+    if (!req.file) {
+        return res.status(400).send('Фото не загружено');
+    }
+    
+    try {
+        await db.query(
+            'INSERT INTO project_detail_photos (project_detail_id, image_url, title, description, display_order) VALUES (?, ?, ?, ?, ?)',
+            [project_detail_id, req.file.filename, title || null, description || null, display_order || 0]
+        );
+        
+        const [detail] = await db.query('SELECT project_id FROM project_details WHERE id = ?', [project_detail_id]);
+        res.redirect(`/admin/projects/${detail[0].project_id}/detail?success=4`);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка добавления фото');
+    }
+});
+
+// Админ: удаление фото
+app.post('/admin/projects/photos/:id/delete', isAdmin, async (req, res) => {
+    const photoId = req.params.id;
+    
+    try {
+        const [photo] = await db.query('SELECT * FROM project_detail_photos WHERE id = ?', [photoId]);
+        
+        if (photo[0] && photo[0].image_url) {
+            const filePath = path.join(__dirname, 'public', 'img', photo[0].image_url);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        
+        const [detail] = await db.query('SELECT project_id FROM project_details WHERE id = ?', [photo[0].project_detail_id]);
+        
+        await db.query('DELETE FROM project_detail_photos WHERE id = ?', [photoId]);
+        
+        res.redirect(`/admin/projects/${detail[0].project_id}/detail?success=5`);
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.status(500).send('Ошибка удаления');
+    }
+});
+
+// Админ: создание нового проекта (год)
+app.post('/admin/projects/add', isAdmin, async (req, res) => {
+    const { year, title, object_type, image_url, slug } = req.body;
+    
+    try {
+        const [result] = await db.query(
+            'INSERT INTO projects (year, title, object_type, image_url, slug) VALUES (?, ?, ?, ?, ?)',
+            [year, title, object_type, image_url || null, slug || title.toLowerCase().replace(/\s+/g, '-')]
+        );
+        
+        res.redirect('/admin/projects?success=1');
+        
+    } catch (err) {
+        console.error('Ошибка:', err);
+        res.redirect('/admin/projects?error=1');
+    }
+});
+
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
