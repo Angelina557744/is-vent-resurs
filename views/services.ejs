@@ -1,141 +1,164 @@
 <%- include('partials/header') %>
 
 <section class="services-hero">
-    <div class="container">
-        <h1 class="animate__animated animate__fadeInDown" style="font-size: 3.5rem; letter-spacing: 2px; text-transform: uppercase;">
+    <div class="services-container">
+        <h1 class="animate__animated animate__fadeInDown">
             <%= settings.services_hero_title || 'УСЛУГИ ПОД КЛЮЧ' %>
         </h1>
-        <p class="animate__animated animate__fadeInUp" style="max-width: 800px; margin: 20px auto; font-size: 1.2rem; font-weight: 200;">
+        <p class="animate__animated animate__fadeInUp">
             <%= settings.services_hero_subtitle || 'Проектирование, поставка оборудования и монтаж инженерных систем для промышленных и коммерческих объектов по всей России и Казахстану.' %>
         </p>
-        <a href="#catalog" class="btn btn-blue animate__animated animate__zoomIn" style="font-weight: 600;">Заказать проект</a>
+        <a href="#catalog" class="services-btn-primary animate__animated animate__zoomIn">Заказать проект</a>
     </div>
 </section>
 
-<section class="container info-section">
-    <div class="info-content">
-        <span style="color: var(--primary-blue); font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Почему «ВентРесурс»?</span>
-        <h2 style="font-size: 2.5rem; margin-top: 10px; font-weight: 700;">Комплексный подход к инженерным решениям</h2>
-        
-        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 30px;">
-            <i data-lucide="wrench" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 5px;">Инжиниринг</h4>
-                <p style="font-weight: 300;">Более 300 проектов «под ключ». Собственный проектный отдел.</p>
+<section class="services-info-section">
+    <div class="services-info-grid">
+        <div class="services-info-content">
+            <span class="services-info-badge">Почему «ВентРесурс»?</span>
+            <h2>Комплексный подход к инженерным решениям</h2>
+            
+            <div class="services-benefit-item">
+                <div class="services-benefit-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4>Инжиниринг</h4>
+                    <p>Более 300 проектов «под ключ». Собственный проектный отдел.</p>
+                </div>
+            </div>
+
+            <div class="services-benefit-item">
+                <div class="services-benefit-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <rect x="1" y="3" width="15" height="13" rx="2" ry="2"></rect>
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+                        <circle cx="5.5" cy="18.5" r="2.5"></circle>
+                        <circle cx="18.5" cy="18.5" r="2.5"></circle>
+                    </svg>
+                </div>
+                <div>
+                    <h4>Техника</h4>
+                    <p>Собственная техника и склады. Материалы всегда в наличии.</p>
+                </div>
+            </div>
+
+            <div class="services-benefit-item">
+                <div class="services-benefit-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                        <line x1="8" y1="2" x2="8" y2="18"></line>
+                        <line x1="16" y1="6" x2="16" y2="22"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h4>География</h4>
+                    <p>Работаем по всей РФ и Республике Казахстан. Выезд специалиста — бесплатно.</p>
+                </div>
             </div>
         </div>
 
-        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 25px; transition-delay: 0.2s;">
-            <i data-lucide="truck" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 5px;">Техника</h4>
-                <p style="font-weight: 300;">Собственная техника и склады. Материалы всегда в наличии.</p>
+        <div class="services-sidebar-form">
+            <div id="services-form-content">
+                <h3>Нужна помощь?</h3>
+                <p>Оставьте заявку, инженер проконсультирует вас бесплатно.</p>
+                <form id="servicesCallbackForm">
+                    <input type="text" name="name" placeholder="Ваше имя" required>
+                    <input type="tel" name="phone" placeholder="Телефон" required>
+                    <button type="submit" class="services-btn-primary services-btn-block">Позвоните мне</button>
+                </form>
+            </div>
+            <div id="services-success-message" class="services-success-message" style="display: none;">
+                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#28a745" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <h3>Заявка принята!</h3>
+                <p>Скоро мы с вами свяжемся.</p>
             </div>
         </div>
-
-        <div class="benefit-item animate__animated animate__fadeInLeft" style="display: flex; align-items: flex-start; gap: 15px; margin-top: 25px; transition-delay: 0.4s;">
-            <i data-lucide="map" size="40" style="color: var(--primary-blue); flex-shrink: 0;"></i>
-            <div>
-                <h4 style="font-weight: 600; margin-bottom: 5px;">География</h4>
-                <p style="font-weight: 300;">Работаем по всей РФ и Республике Казахстан. Выезд специалиста — бесплатно.</p>
-            </div>
-        </div>
     </div>
-
-<div class="sidebar-form" id="callback-container" style="background: white; padding: 30px; border-radius: 15px; border-top: 5px solid var(--primary-blue);">
-    <div id="form-content">
-        <h3 style="font-weight: 700; margin-bottom: 10px;">Нужна помощь?</h3>
-        <p style="font-size: 0.9rem; margin-bottom: 20px;">Оставьте заявку, инженер проконсультирует вас бесплатно.</p>
-        <form id="callbackForm">
-            <input type="text" name="name" placeholder="Ваше имя" required style="width:100%; padding:12px; margin-bottom:15px; border-radius:8px; border:1px solid #ddd;">
-            <input type="tel" name="phone" placeholder="Телефон" required style="width:100%; padding:12px; margin-bottom:20px; border-radius:8px; border:1px solid #ddd;">
-            <button type="submit" class="btn btn-blue" style="width: 100%; padding: 15px; font-weight: 600;">Позвоните мне</button>
-        </form>
-    </div>
-
-    <div id="success-message" style="display: none; text-align: center; padding: 20px 0;">
-        <i data-lucide="check-circle" size="60" style="color: #28a745; margin-bottom: 15px;"></i>
-        <h3 style="font-weight: 700;">Заявка принята!</h3>
-        <p style="font-size: 0.9rem; color: #666;">Скоро мы с вами свяжемся.</p>
-    </div>
-</div>
-
-<script>
-document.getElementById('callbackForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const data = { name: e.target.name.value, phone: e.target.phone.value };
-    const response = await fetch('/callback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    });
-    if (response.ok) {
-        document.getElementById('form-content').style.display = 'none';
-        document.getElementById('success-message').style.display = 'block';
-        if (window.lucide) lucide.createIcons();
-    }
-});
-</script>
 </section>
 
-<section id="catalog" style="background: var(--light-gray); padding: 80px 0;">
-    <div class="container">
-        <h2 style="text-align: center; margin-bottom: 50px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">
-            Направления деятельности
-        </h2>
+<section class="services-catalog-section" id="catalog">
+    <div class="services-catalog-container">
+        <div class="services-section-header">
+            <span class="services-section-label">НАШИ УСЛУГИ</span>
+            <h2>Направления деятельности</h2>
+            <div class="services-section-line"></div>
+        </div>
         
-        <div class="services-grid" id="servicesGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px;">
+        <div class="services-grid">
             <% services.forEach(service => { %>
-                <div class="service-card reveal-on-scroll" style="background: white; padding: 25px; border-radius: 15px; border: 1px solid #eee; transition: all 0.3s ease; display: flex; flex-direction: column; justify-content: space-between;">
-                    <div>
-                        <div class="service-image-container" style="width: 100%; height: 200px; overflow: hidden; border-radius: 10px; margin-bottom: 20px;">
-                            <% if (service.image_url && service.image_url !== '') { %>
-                                <img src="/img/<%= service.image_url %>" 
-                                     alt="<%= service.title %>" 
-                                     loading="lazy" 
-                                     style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;">
-                            <% } else { %>
-                                <div style="width: 100%; height: 100%; background: #f9f9f9; display: flex; align-items: center; justify-content: center;">
-                                    <i data-lucide="image" size="48" style="color: #ccc;"></i>
-                                </div>
-                            <% } %>
-                        </div>
-
-                        <h3 style="font-weight: 600; font-size: 1.2rem; margin-bottom: 15px; min-height: 2.4em; display: flex; align-items: center;">
-                            <%= service.title %>
-                        </h3>
-                        
-                        <p style="font-size: 0.85rem; color: var(--text-gray); font-weight: 300; line-height: 1.5; margin-bottom: 20px;">
-                            <%= service.description %>
-                        </p>
+                <div class="services-card">
+                    <div class="services-image-container">
+                        <% if (service.image_url && service.image_url !== '') { %>
+                            <img src="/img/<%= service.image_url %>" alt="<%= service.title %>" loading="lazy">
+                        <% } else { %>
+                            <div class="services-image-placeholder">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                            </div>
+                        <% } %>
                     </div>
-                    
- <a href="/services/<%= service.id %>" class="service-link">Подробнее</a>
+                    <h3><%= service.title %></h3>
+                    <p><%= service.description %></p>
+                    <a href="/services/<%= service.id %>" class="services-link">
+                        Подробнее
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
                 </div>
             <% }) %>
         </div>
     </div>
 </section>
 
-<%- include('partials/header') %> <%- include('partials/footer') %>
-
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const observerOptions = {
-            threshold: 0.1
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
-                    observer.unobserve(entry.target);
-                }
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('servicesCallbackForm');
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = { 
+                name: e.target.name.value, 
+                phone: e.target.phone.value 
+            };
+            const response = await fetch('/callback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
-        }, observerOptions);
-
-        document.querySelectorAll('.reveal-on-scroll').forEach(card => {
-            observer.observe(card);
+            if (response.ok) {
+                document.getElementById('services-form-content').style.display = 'none';
+                document.getElementById('services-success-message').style.display = 'block';
+            }
         });
+    }
+
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+    document.querySelectorAll('.services-card').forEach(card => {
+        observer.observe(card);
     });
+});
 </script>
+
+<%- include('partials/footer') %>
