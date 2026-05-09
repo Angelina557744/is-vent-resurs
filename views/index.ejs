@@ -2,49 +2,91 @@
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
+<!-- ========== HERO ========== -->
 <section class="home-hero">
     <div class="swiper hero-swiper">
         <div class="swiper-wrapper">
             <% slides.forEach(slide => { %>
-                <div class="swiper-slide" style="background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,86,179,0.4)), url('/img/<%= slide.image_url %>');">
+                <div class="swiper-slide" style="background-image: linear-gradient(rgba(0,0,0,0.55), rgba(0,56,150,0.45)), url('/img/<%= slide.image_url %>');">
                 </div>
             <% }) %>
         </div>
     </div>
     <div class="hero-content">
         <div class="container">
-            <h1 class="animate__animated animate__fadeInDown"><%= settings.home_hero_title %></h1>
-            <p class="animate__animated animate__fadeInUp"><%= settings.home_hero_subtitle %></p>
-            <span class="extra-text"><%= settings.home_hero_extra %></span>
-            <div style="margin-top: 30px;">
+            <div class="hero-badge animate__animated animate__fadeInDown">Профессиональные инженерные решения</div>
+            <h1 class="animate__animated animate__fadeInDown animate__delay-1s"><%= settings.home_hero_title %></h1>
+            <p class="animate__animated animate__fadeInUp animate__delay-1s"><%= settings.home_hero_subtitle %></p>
+            <span class="extra-text animate__animated animate__fadeInUp animate__delay-2s"><%= settings.home_hero_extra %></span>
+            <div class="hero-actions animate__animated animate__fadeInUp animate__delay-2s">
                <a href="/services#callback-container" class="btn-hero">Рассчитать проект</a>
+               <a href="/services" class="btn-hero-outline">Наши услуги</a>
+            </div>
+        </div>
+    </div>
+    <div class="hero-scroll-hint">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+</section>
+
+<!-- ========== STATS BAR ========== -->
+<section class="stats-bar">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-number">15+</span>
+                <span class="stat-label">Лет на рынке</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">500+</span>
+                <span class="stat-label">Завершённых проектов</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">50+</span>
+                <span class="stat-label">Партнёров</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">10</span>
+                <span class="stat-label">Регионов присутствия</span>
             </div>
         </div>
     </div>
 </section>
 
-<section class="about-section">
+<!-- ========== О КОМПАНИИ ========== -->
+<section class="about-section reveal-section">
     <div class="container">
         <div class="section-header">
+            <span class="section-label">О нас</span>
             <h2><%= settings.home_about_title %></h2>
-            <div class="line"></div>
+            <div class="section-line"></div>
         </div>
-<div class="about-text-columns">
-    <% if (settings && settings.home_about_text) { %>
-        <%- settings.home_about_text.replace(/\r\n/g, '<br>') %>
-    <% } else { %>
-        <p>Текст о компании находится в стадии заполнения...</p>
-    <% } %>
-</div>
+        <div class="about-text-columns">
+            <% if (settings && settings.home_about_text) { %>
+                <%- settings.home_about_text.replace(/\r\n/g, '<br>') %>
+            <% } else { %>
+                <p>Текст о компании находится в стадии заполнения...</p>
+            <% } %>
+        </div>
     </div>
 </section>
 
-<section class="advantages-section">
+<!-- ========== ПРЕИМУЩЕСТВА ========== -->
+<section class="advantages-section reveal-section">
     <div class="container">
-        <h2 class="text-center">Наши преимущества</h2>
+        <div class="section-header">
+            <span class="section-label">Почему мы</span>
+            <h2>Наши преимущества</h2>
+            <div class="section-line"></div>
+        </div>
         <div class="advantages-grid">
-            <% advantages.forEach(adv => { %>
-                <div class="adv-card">
+            <% advantages.forEach((adv, index) => { %>
+              <div class="adv-card" style="animation-delay: <%= index * 0.1 %>s">
                     <div class="adv-icon">
                         <i data-lucide="<%= adv.icon_name %>"></i>
                     </div>
@@ -56,9 +98,12 @@
     </div>
 </section>
 
+<!-- ========== ПАРТНЁРЫ (бегущая строка) ========== -->
 <section class="partners-ticker">
     <div class="container">
-        <h3>Компания является официальным представителем:</h3>
+        <div class="ticker-label">
+            <span>Официальный представитель</span>
+        </div>
     </div>
     <div class="ticker-wrapper">
         <div class="ticker-track">
@@ -71,12 +116,18 @@
     </div>
 </section>
 
-<section class="geo-section">
+<!-- ========== ГЕОГРАФИЯ ========== -->
+<section class="geo-section reveal-section">
     <div class="container">
         <div class="geo-grid">
             <div class="geo-content">
+                <span class="section-label">Масштаб работ</span>
                 <h2><%= settings.home_geo_title %></h2>
                 <p><%= settings.home_geo_text %></p>
+                <a href="/contacts" class="geo-link">
+                    Связаться с нами
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                </a>
             </div>
             <div class="geo-map">
                 <img src="/img/<%= settings.home_geo_map %>" alt="Map">
@@ -84,172 +135,46 @@
         </div>
     </div>
 </section>
-<!-- Блок Сертификаты и лицензии -->
-<section class="certificates-section" style="padding: 60px 0; background: #f8f9fa;">
-    <div class="container">
-        <div style="text-align: center; margin-bottom: 40px;">
-            <h2 style="font-size: 2rem; color: var(--black);">Сертификаты и лицензии компании</h2>
-            <div style="width: 60px; height: 3px; background: var(--primary-blue); margin: 15px auto 0;"></div>
-        </div>
-        
-        <div id="certificates-slider" style="max-width: 800px; margin: 0 auto; position: relative;">
-            <div id="certificates-container" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; text-align: center;">
-                <!-- Здесь будут загружаться сертификаты -->
-            </div>
-            
-           <button id="prev-cert" style="position: absolute; left: -60px; top: 50%; transform: translateY(-50%); background: var(--primary-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="15 18 9 12 15 6"></polyline>
-    </svg>
-</button>
 
-<button id="next-cert" style="position: absolute; right: -60px; top: 50%; transform: translateY(-50%); background: var(--primary-blue); color: white; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="9 18 15 12 9 6"></polyline>
-    </svg>
-</button>
-        
-        <div style="text-align: center; margin-top: 20px;">
-            <span id="cert-counter" style="font-size: 0.8rem; color: #888;"></span>
+<!-- ========== СЕРТИФИКАТЫ ========== -->
+<section class="certificates-section reveal-section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-label">Документы</span>
+            <h2>Сертификаты и лицензии</h2>
+            <div class="section-line"></div>
+        </div>
+
+        <div class="cert-slider-wrapper">
+            <button id="prev-cert" class="cert-nav-btn" aria-label="Назад">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </button>
+
+            <div id="certificates-container" class="cert-grid">
+                <!-- Загружается через JS -->
+            </div>
+
+            <button id="next-cert" class="cert-nav-btn" aria-label="Вперёд">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <div class="cert-counter-wrap">
+            <span id="cert-counter"></span>
         </div>
     </div>
 </section>
 
-<script>
-    let certificates = [];
-    let currentStartIndex = 0;
-    const itemsPerPage = 5;
-    
-    async function loadCertificates() {
-        try {
-            const response = await fetch('/api/certificates');
-            certificates = await response.json();
-            
-            if (certificates.length > 0) {
-                renderCertificates();
-                updateButtons();
-                updateCounter();
-            } else {
-                document.getElementById('certificates-container').innerHTML = '<p style="color: #999; grid-column: span 5; text-align: center;">Сертификаты временно отсутствуют</p>';
-            }
-        } catch (err) {
-            console.error('Ошибка загрузки сертификатов:', err);
-        }
-    }
-    
-    function renderCertificates() {
-        const container = document.getElementById('certificates-container');
-        const endIndex = Math.min(currentStartIndex + itemsPerPage, certificates.length);
-        const visibleCerts = certificates.slice(currentStartIndex, endIndex);
-        
-        container.innerHTML = '';
-        
-        visibleCerts.forEach(cert => {
-            const certDiv = document.createElement('div');
-            certDiv.style.cssText = 'text-align: center;';
-            certDiv.innerHTML = `
-                <div style="background: white; padding: 10px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-                    <img src="/img/${cert.image_url}" alt="${cert.title}" style="width: 100%; max-width: 130px; height: auto; border-radius: 5px; cursor: pointer;" onclick="showFullImage('/img/${cert.image_url}')">
-                </div>
-                <div style="margin-top: 10px; font-size: 0.75rem; font-weight: 500; color: #555;">${cert.title}</div>
-            `;
-            container.appendChild(certDiv);
-        });
-        
-        // Заполняем пустые места если нужно
-        const remaining = itemsPerPage - visibleCerts.length;
-        for (let i = 0; i < remaining; i++) {
-            const emptyDiv = document.createElement('div');
-            emptyDiv.style.cssText = 'visibility: hidden;';
-            container.appendChild(emptyDiv);
-        }
-    }
-    
-    function updateButtons() {
-        const prevBtn = document.getElementById('prev-cert');
-        const nextBtn = document.getElementById('next-cert');
-        
-        if (certificates.length <= itemsPerPage) {
-            prevBtn.style.display = 'none';
-            nextBtn.style.display = 'none';
-        } else {
-            prevBtn.style.display = currentStartIndex > 0 ? 'flex' : 'none';
-            nextBtn.style.display = currentStartIndex + itemsPerPage < certificates.length ? 'flex' : 'none';
-        }
-    }
-    
-    function updateCounter() {
-        const counter = document.getElementById('cert-counter');
-        if (counter && certificates.length > 0) {
-            const endIndex = Math.min(currentStartIndex + itemsPerPage, certificates.length);
-            counter.innerHTML = (currentStartIndex + 1) + ' - ' + endIndex + ' из ' + certificates.length;
-        }
-    }
-    
-    function showFullImage(src) {
-        // Создаем модальное окно для просмотра крупного фото
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; align-items: center; justify-content: center; cursor: pointer;';
-        modal.innerHTML = `<img src="${src}" style="max-width: 90%; max-height: 90%; object-fit: contain;">`;
-        modal.onclick = () => modal.remove();
-        document.body.appendChild(modal);
-    }
-    
-    document.getElementById('prev-cert')?.addEventListener('click', () => {
-        if (currentStartIndex - itemsPerPage >= 0) {
-            currentStartIndex -= itemsPerPage;
-        } else {
-            currentStartIndex = Math.max(0, certificates.length - itemsPerPage);
-        }
-        renderCertificates();
-        updateButtons();
-        updateCounter();
-    });
-    
-    document.getElementById('next-cert')?.addEventListener('click', () => {
-        if (currentStartIndex + itemsPerPage < certificates.length) {
-            currentStartIndex += itemsPerPage;
-        } else {
-            currentStartIndex = 0;
-        }
-        renderCertificates();
-        updateButtons();
-        updateCounter();
-    });
-    
-    loadCertificates();
-</script>
-
-<style>
-    @media (max-width: 768px) {
-        #certificates-container {
-            grid-template-columns: repeat(3, 1fr) !important;
-            gap: 15px !important;
-        }
-        #prev-cert {
-            left: -40px !important;
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 16px !important;
-        }
-        #next-cert {
-            right: -40px !important;
-            width: 35px !important;
-            height: 35px !important;
-            font-size: 16px !important;
-        }
-    }
-    
-    @media (max-width: 480px) {
-        #certificates-container {
-            grid-template-columns: repeat(2, 1fr) !important;
-        }
-    }
-</style>
-
+<!-- ========== КЛИЕНТЫ (бегущая строка) ========== -->
 <section class="partners-ticker clients">
     <div class="container">
-        <h3>Клиенты и партнеры компании</h3>
+        <div class="ticker-label">
+            <span>Клиенты и партнёры</span>
+        </div>
     </div>
     <div class="ticker-wrapper">
         <div class="ticker-track reverse">
@@ -262,14 +187,153 @@
     </div>
 </section>
 
+<!-- ========== CTA БЛОК ========== -->
+<section class="cta-section reveal-section">
+    <div class="container">
+        <div class="cta-inner">
+            <h2>Готовы обсудить ваш проект?</h2>
+            <p>Оставьте заявку — наш инженер проконсультирует вас бесплатно.</p>
+            <a href="/contacts" class="btn-hero">Оставить заявку</a>
+        </div>
+    </div>
+</section>
+
 <%- include('partials/footer') %>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 <script>
+    // Swiper
     new Swiper('.hero-swiper', {
         loop: true,
         effect: 'fade',
         autoplay: { delay: 5000 },
-        speed: 1000
+        speed: 1200
     });
+
+    // Scroll reveal
+    const revealSections = document.querySelectorAll('.reveal-section');
+    const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('revealed');
+                revealObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+    revealSections.forEach(s => revealObserver.observe(s));
+
+    // Adv cards stagger
+    const advCards = document.querySelectorAll('.adv-card');
+    const advObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('adv-visible');
+                advObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15 });
+    advCards.forEach(c => advObserver.observe(c));
+
+    // Certificates
+    let certificates = [];
+    let currentStartIndex = 0;
+    const itemsPerPage = 5;
+
+    async function loadCertificates() {
+        try {
+            const response = await fetch('/api/certificates');
+            certificates = await response.json();
+            if (certificates.length > 0) {
+                renderCertificates();
+                updateButtons();
+                updateCounter();
+            } else {
+                document.getElementById('certificates-container').innerHTML =
+                    '<p class="cert-empty">Сертификаты временно отсутствуют</p>';
+            }
+        } catch (err) {
+            console.error('Ошибка загрузки сертификатов:', err);
+        }
+    }
+
+    function renderCertificates() {
+        const container = document.getElementById('certificates-container');
+        const endIndex = Math.min(currentStartIndex + itemsPerPage, certificates.length);
+        const visibleCerts = certificates.slice(currentStartIndex, endIndex);
+
+        container.innerHTML = '';
+        visibleCerts.forEach(cert => {
+            const div = document.createElement('div');
+            div.className = 'cert-card';
+            div.innerHTML = `
+                <div class="cert-img-wrap" onclick="showFullImage('/img/${cert.image_url}')">
+                    <img src="/img/${cert.image_url}" alt="${cert.title}">
+                    <div class="cert-overlay">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    </div>
+                </div>
+                <p class="cert-title">${cert.title}</p>
+            `;
+            container.appendChild(div);
+        });
+
+        // Заполнители для выравнивания сетки
+        const remaining = itemsPerPage - visibleCerts.length;
+        for (let i = 0; i < remaining; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'cert-card cert-placeholder';
+            container.appendChild(empty);
+        }
+    }
+
+    function updateButtons() {
+        const prevBtn = document.getElementById('prev-cert');
+        const nextBtn = document.getElementById('next-cert');
+        if (certificates.length <= itemsPerPage) {
+            prevBtn.style.visibility = 'hidden';
+            nextBtn.style.visibility = 'hidden';
+        } else {
+            prevBtn.style.visibility = currentStartIndex > 0 ? 'visible' : 'hidden';
+            nextBtn.style.visibility = currentStartIndex + itemsPerPage < certificates.length ? 'visible' : 'hidden';
+        }
+    }
+
+    function updateCounter() {
+        const counter = document.getElementById('cert-counter');
+        if (counter && certificates.length > 0) {
+            const end = Math.min(currentStartIndex + itemsPerPage, certificates.length);
+            counter.textContent = `${currentStartIndex + 1}–${end} из ${certificates.length}`;
+        }
+    }
+
+    function showFullImage(src) {
+        const modal = document.createElement('div');
+        modal.className = 'cert-modal';
+        modal.innerHTML = `
+            <div class="cert-modal-inner">
+                <img src="${src}" alt="Сертификат">
+                <button class="cert-modal-close" onclick="this.closest('.cert-modal').remove()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+        `;
+        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        document.body.appendChild(modal);
+    }
+
+    document.getElementById('prev-cert')?.addEventListener('click', () => {
+        currentStartIndex = Math.max(0, currentStartIndex - itemsPerPage);
+        renderCertificates(); updateButtons(); updateCounter();
+    });
+
+    document.getElementById('next-cert')?.addEventListener('click', () => {
+        if (currentStartIndex + itemsPerPage < certificates.length) {
+            currentStartIndex += itemsPerPage;
+        } else {
+            currentStartIndex = 0;
+        }
+        renderCertificates(); updateButtons(); updateCounter();
+    });
+
+    loadCertificates();
 </script>
