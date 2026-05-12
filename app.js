@@ -49,7 +49,7 @@ const storage = multer.diskStorage({
     }
 });
 
-const upload = multer({ 
+const upload = multer({
     storage: storage,
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
@@ -112,7 +112,7 @@ app.use(async (req, res, next) => {
         rows.forEach(row => {
             settings[row.setting_key] = row.setting_value;
         });
-        res.locals.settings = settings; 
+        res.locals.settings = settings;
         next();
     } catch (err) {
         console.error('Ошибка в Middleware настроек:', err);
@@ -124,6 +124,18 @@ app.use(async (req, res, next) => {
 // 2. Пользователь во все шаблоны
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    next();
+});
+
+// 3. Роли пользователя во все шаблоны (для админки)
+app.use((req, res, next) => {
+    if (req.session.user) {
+        res.locals.isAdmin = req.session.user.role === 'admin';
+        res.locals.isManager = req.session.user.role === 'manager';
+    } else {
+        res.locals.isAdmin = false;
+        res.locals.isManager = false;
+    }
     next();
 });
 

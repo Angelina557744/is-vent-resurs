@@ -1,42 +1,56 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><%= title %></title>
+    <title>
+        <%= title %>
+    </title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
+
 <body>
     <header class="main-header">
         <div class="header-top">
             <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
                 <div class="header-contacts">
-                    <a href="tel:+73532439999"><i data-lucide="phone" size="14"></i> <%= settings.contact_phone_1 || '+7 (3532) 43-99-99' %></a>
+                    <a href="tel:+73532439999"><i data-lucide="phone" size="14"></i>
+                        <%= settings.contact_phone_1 || '+7 (3532) 43-99-99' %>
+                    </a>
                     <a href="tel:88002013784"><i data-lucide="phone" size="14"></i> 8 (800) 201-37-84</a>
                 </div>
                 <div class="header-auth">
                     <% if (user) { %>
                         <div style="display: flex; gap: 15px; align-items: center;">
-                            <% if (user.role === 'admin') { %>
-                                <a href="/admin" style="color: #ffd700; text-decoration: none; font-size: 0.9rem; font-weight: bold;">
-                                    <i data-lucide="layout-dashboard" size="16"></i> Админ-панель
+                            <% if (user.role==='admin' || user.role==='manager' ) { %>
+                                <a href="/admin"
+                                    style="color: #ffd700; text-decoration: none; font-size: 0.9rem; font-weight: bold;">
+                                    <i data-lucide="layout-dashboard" size="16"></i>
+                                    <% if (user.role==='admin' ) { %>
+                                        Админ-панель
+                                        <% } else { %>
+                                            Панель менеджера
+                                            <% } %>
                                 </a>
-                            <% } %>
-                            <a href="/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
-                                <i data-lucide="user" size="16"></i> <%= user.full_name %>
-                            </a>
-                            <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-size: 0.9rem;">
-                                <i data-lucide="log-out" size="16"></i> Выйти
-                            </a>
+                                <% } %>
+                                    <a href="/profile" style="color: white; text-decoration: none; font-size: 0.9rem;">
+                                        <i data-lucide="user" size="16"></i>
+                                        <%= user.full_name %>
+                                    </a>
+                                    <a href="/logout" style="color: #ff4d4d; text-decoration: none; font-size: 0.9rem;">
+                                        <i data-lucide="log-out" size="16"></i> Выйти
+                                    </a>
                         </div>
-                    <% } else { %>
-                        <a href="/login" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 0.9rem;">
-                            <i data-lucide="user" size="18"></i> Войти
-                        </a>
-                    <% } %>
+                        <% } else { %>
+                            <a href="/login"
+                                style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px; font-size: 0.9rem;">
+                                <i data-lucide="user" size="18"></i> Войти
+                            </a>
+                            <% } %>
                 </div>
             </div>
         </div>
@@ -48,14 +62,14 @@
                         <img src="/img/logo.png" alt="ВентРесурс" style="height: 50px; width: auto; display: block;">
                     </a>
                 </div>
-                
+
                 <!-- Бургер-кнопка -->
                 <button class="burger-menu" id="burgerBtn" aria-label="Меню">
                     <span></span>
                     <span></span>
                     <span></span>
                 </button>
-                
+
                 <!-- Навигационное меню -->
                 <nav class="nav-menu" id="navMenu">
                     <a href="/">Главная</a>
@@ -64,34 +78,36 @@
                     <a href="/contacts">Контакты</a>
                     <div class="mobile-auth">
                         <% if (user) { %>
-                        <% } else { %>
-                        <% } %>
+                            <% } else { %>
+                                <% } %>
                     </div>
                 </nav>
-                
+
                 <div class="header-actions">
-                    <a href="/services#callback-container" class="btn btn-blue" style="padding: 10px 20px; font-size: 0.8rem; text-decoration: none; display: inline-block; text-align: center;">Обратный звонок</a>
+                    <a href="/services#callback-container" class="btn btn-blue"
+                        style="padding: 10px 20px; font-size: 0.8rem; text-decoration: none; display: inline-block; text-align: center;">Обратный
+                        звонок</a>
                 </div>
             </div>
         </div>
     </header>
-    
+
     <script>
         // Бургер-меню
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const burgerBtn = document.getElementById('burgerBtn');
             const navMenu = document.getElementById('navMenu');
-            
+
             if (burgerBtn && navMenu) {
-                burgerBtn.addEventListener('click', function() {
+                burgerBtn.addEventListener('click', function () {
                     this.classList.toggle('active');
                     navMenu.classList.toggle('active');
                     document.body.classList.toggle('menu-open');
                 });
-                
+
                 // Закрытие меню при клике на ссылку
                 navMenu.querySelectorAll('a').forEach(link => {
-                    link.addEventListener('click', function() {
+                    link.addEventListener('click', function () {
                         burgerBtn.classList.remove('active');
                         navMenu.classList.remove('active');
                         document.body.classList.remove('menu-open');

@@ -80,30 +80,24 @@ exports.postLogin = async (req, res) => {
         );
 
         if (isPasswordCorrect) {
-
             req.session.user = {
                 id: user.id,
                 username: user.username,
                 full_name: user.full_name,
-                role: user.role,
+                role: user.role,      // здесь будет 'admin', 'manager' или 'user'
                 email: user.email,
                 phone: user.phone
             };
 
             req.session.save(() => {
-
+                // Редирект в зависимости от роли
                 if (user.role === 'admin') {
                     res.redirect('/admin');
+                } else if (user.role === 'manager') {
+                    res.redirect('/admin');   // Менеджер тоже в админку
                 } else {
-                    res.redirect('/profile');
+                    res.redirect('/profile');  // Обычный пользователь в ЛК
                 }
-            });
-
-        } else {
-
-            res.render('login', {
-                title: 'Вход',
-                error: 'Неверный пароль'
             });
         }
 

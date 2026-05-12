@@ -29,7 +29,7 @@ async function getGigaChatToken() {
 // Функция для классификации сообщения через GigaChat
 async function classifyMessageWithGigaChat(message) {
     const agent = new https.Agent({ rejectUnauthorized: false });
-    
+
     const prompt = `Классифицируй вопрос пользователя в одну из категорий:
 - Ремонт (вопросы о ремонте вентиляции, замене оборудования)
 - Проектирование (вопросы о расчетах, проектной документации)
@@ -43,7 +43,7 @@ async function classifyMessageWithGigaChat(message) {
 
     try {
         const token = await getGigaChatToken();
-        
+
         const response = await axios.post(
             'https://gigachat.devices.sberbank.ru/api/v1/chat/completions',
             {
@@ -68,7 +68,7 @@ async function classifyMessageWithGigaChat(message) {
                 httpsAgent: agent
             }
         );
-        
+
         let category = response.data.choices[0].message.content.trim();
         const validCategories = ['Ремонт', 'Проектирование', 'Сотрудничество', 'Цена', 'Общее'];
         if (!validCategories.includes(category)) {
@@ -85,7 +85,7 @@ async function classifyMessageWithGigaChat(message) {
 exports.submitServiceOrder = async (req, res) => {
     const { service_id, service_title, name, email, phone, comment } = req.body;
     const userId = req.session.user?.id || null;
-    
+
     try {
         await db.query(
             'INSERT INTO service_orders (user_id, service_id, service_title, name, email, phone, comment, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -102,35 +102,35 @@ exports.submitServiceOrder = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     const userId = req.session.user.id;
     const { email, phone, password } = req.body;
-    
+
     try {
         if (email) {
             const [existing] = await db.query(
-                'SELECT id FROM users WHERE email = ? AND id != ?', 
+                'SELECT id FROM users WHERE email = ? AND id != ?',
                 [email, userId]
             );
             if (existing.length > 0) {
                 return res.json({ success: false, error: 'Этот email уже используется' });
             }
         }
-        
+
         let query = 'UPDATE users SET email = ?, phone = ?';
         const params = [email, phone || null];
-        
+
         if (password && password.length >= 4) {
             const hashedPassword = await bcrypt.hash(password, 10);
             query += ', password = ?';
             params.push(hashedPassword);
         }
-        
+
         query += ' WHERE id = ?';
         params.push(userId);
-        
+
         await db.query(query, params);
-        
+
         req.session.user.email = email;
         req.session.user.phone = phone || null;
-        
+
         res.json({ success: true, message: 'Профиль успешно обновлен' });
     } catch (err) {
         console.error('Ошибка обновления профиля:', err);
@@ -141,19 +141,19 @@ exports.updateProfile = async (req, res) => {
 // ========== СОХРАНЕНИЕ РЕЗУЛЬТАТОВ КВИЗА ==========
 exports.saveQuizResult = async (req, res) => {
     const httpsAgent = new https.Agent({ rejectUnauthorized: false });
-    
-    const { 
+
+    const {
         building_type, area, people_count, budget_range, industry,
-        ceiling_height, automation 
+        ceiling_height, automation
     } = req.body;
-    
+
     const userId = req.session.user.id;
-    
+
     let estimated_price = parseFloat(area) * 5000;
     if (budget_range === 'Премиум') estimated_price *= 1.5;
     if (budget_range === 'Стандарт') estimated_price *= 1.2;
     if (building_type === 'Производство') estimated_price *= 1.3;
-    
+
     const prompt = `Ты профессиональный инженер-консультант компании "ВентРесурс".
 
 Данные клиента после квиза:
@@ -211,14 +211,14 @@ exports.saveQuizResult = async (req, res) => {
                 httpsAgent: httpsAgent
             }
         );
-        
+
         if (response.data?.choices?.[0]) {
             recommendation = response.data.choices[0].message.content;
         }
     } catch (err) {
         console.error('Ошибка GigaChat, используем стандартный ответ');
     }
-    
+
     try {
         await db.query(
             `INSERT INTO quiz_results 
@@ -247,13 +247,13 @@ exports.submitCallback = async (req, res) => {
 // ========== КОНТАКТНОЕ СООБЩЕНИЕ ==========
 exports.submitContactMessage = async (req, res) => {
     const { name, email, phone, message } = req.body;
-    
+
     if (!name || !email || !message) {
         return res.status(400).json({ success: false, error: 'Заполните все обязательные поля' });
     }
-    
+
     let category = 'Общее';
-    
+
     try {
         category = await classifyMessageWithGigaChat(message);
         await db.query(
@@ -283,7 +283,7 @@ exports.getCertificates = async (req, res) => {
 // ========== ЧАТ-БОТ ==========
 async function getBotResponse(userMessage) {
     const agent = new https.Agent({ rejectUnauthorized: false });
-    
+
     const prompt = `Ты профессиональный консультант компании "ВентРесурс" - специалист в области проектирования, поставки и монтажа инженерных систем.
 
 Твои правила:
@@ -332,28 +332,28 @@ async function getBotResponse(userMessage) {
 
 exports.sendChatMessage = async (req, res) => {
     const { message, name, phone, sessionId } = req.body;
-    
+
     if (!message) {
         return res.json({ error: 'Сообщение не может быть пустым' });
     }
-    
+
     try {
         const botResponse = await getBotResponse(message);
-        const needCall = botResponse.includes('оставьте') || 
-                        botResponse.includes('номер') || 
-                        botResponse.includes('свяжется');
-        
+        const needCall = botResponse.includes('оставьте') ||
+            botResponse.includes('номер') ||
+            botResponse.includes('свяжется');
+
         await db.query(
             `INSERT INTO chat_messages (session_id, user_name, user_phone, user_message, bot_response, need_call) 
              VALUES (?, ?, ?, ?, ?, ?)`,
             [sessionId, name || null, phone || null, message, botResponse, needCall ? 1 : 0]
         );
-        
+
         if (needCall && (name || phone)) {
             await db.query('INSERT INTO callbacks (name, phone, status) VALUES (?, ?, "new")',
                 [name || 'Чат бот', phone || 'не указан']);
         }
-        
+
         res.json({ success: true, response: botResponse, needCall: needCall });
     } catch (err) {
         console.error('Ошибка чата:', err);

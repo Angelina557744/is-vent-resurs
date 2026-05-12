@@ -21,10 +21,11 @@
         <form method="GET" style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
             <input type="text" name="search" placeholder="Поиск по имени, email, телефону" value="<%= search %>" style="flex: 2; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
             <select name="role" style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
-                <option value="all" <%= role === 'all' ? 'selected' : '' %>>Все роли</option>
-                <option value="user" <%= role === 'user' ? 'selected' : '' %>>Пользователи</option>
-                <option value="admin" <%= role === 'admin' ? 'selected' : '' %>>Администраторы</option>
-            </select>
+    <option value="all" <%= role === 'all' ? 'selected' : '' %>>Все роли</option>
+    <option value="user" <%= role === 'user' ? 'selected' : '' %>>Пользователи</option>
+    <option value="manager" <%= role === 'manager' ? 'selected' : '' %>>Менеджеры</option>
+    <option value="admin" <%= role === 'admin' ? 'selected' : '' %>>Администраторы</option>
+</select>
             <input type="hidden" name="sort" value="<%= sort %>">
             <input type="hidden" name="order" value="<%= order %>">
             <button type="submit" class="btn btn-blue" style="padding: 8px 20px;">Применить</button>
@@ -54,11 +55,15 @@
                             <td style="padding: 12px;"><strong><%= user.full_name %></strong><br><small style="color:#888;"><%= user.username %></small></td>
                             <td style="padding: 12px;"><%= user.email %></td>
                             <td style="padding: 12px;"><%= user.phone || '-' %></td>
-                            <td style="padding: 12px;">
-                                <span style="background: <%= user.role === 'admin' ? '#dc3545' : '#28a745' %>; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">
-                                    <%= user.role === 'admin' ? 'Админ' : 'Пользователь' %>
-                                </span>
-                            </td>
+                           <td style="padding: 12px;">
+    <% if (user.role === 'admin') { %>
+        <span style="background: #dc3545; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">Администратор</span>
+    <% } else if (user.role === 'manager') { %>
+        <span style="background: #ffa500; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">Менеджер</span>
+    <% } else { %>
+        <span style="background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">Пользователь</span>
+    <% } %>
+</td>
                             <td style="padding: 12px;">
                                 <% if (user.is_blocked) { %>
                                     <span style="background: #ffc107; color: #333; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;">Заблокирован</span>
