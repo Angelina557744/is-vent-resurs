@@ -90,6 +90,9 @@ router.get('/admin', isAdminOrManager, adminController.getDashboard);
 // Заявки на звонок
 router.get('/admin/callbacks', isAdminOrManager, adminController.getCallbacks);
 router.post('/admin/callbacks/update-status/:id', isAdminOrManager, adminController.updateCallbackStatus);
+router.get('/admin/callbacks', isAdminOrManager, adminController.getCallbacks);
+router.post('/admin/callbacks/update-status/:id', isAdminOrManager, adminController.updateCallbackStatus);
+router.post('/admin/callbacks/delete/:id', isAdminOrManager, adminController.deleteCallback);  // <-- ДОБАВИТЬ ЭТУ СТРОКУ
 
 // Сообщения пользователей
 router.get('/admin/messages', isAdminOrManager, adminController.getMessages);

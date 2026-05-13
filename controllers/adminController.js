@@ -48,27 +48,54 @@ exports.getDashboard = async (req, res) => {
 };
 
 // ========== ЗАЯВКИ НА ЗВОНОК ==========
+// ========== ЗАЯВКИ НА ЗВОНОК ==========
 exports.getCallbacks = async (req, res) => {
     try {
         const [callbacks] = await db.query('SELECT * FROM callbacks ORDER BY created_at DESC');
-        res.render('admin/callbacks', {
+        res.render('admin/callbacks', { 
             title: 'Заявки на звонок | Админ-панель',
-            callbacks: callbacks || []
+            callbacks: callbacks || [],
+            success: req.query.success || null,   // ← ДОБАВИТЬ
+            error: req.query.error || null        // ← ДОБАВИТЬ
         });
     } catch (error) {
         res.status(500).send('Ошибка загрузки заявок');
     }
 };
 
+// ========== ОБНОВЛЕНИЕ СТАТУСА ЗАЯВКИ ==========
 exports.updateCallbackStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
+    
+    console.log('Обновление статуса:', { id, status }); // Для отладки
+    
     try {
         await db.query('UPDATE callbacks SET status = ? WHERE id = ?', [status, id]);
-        res.redirect('/admin/callbacks');
+        console.log('Статус обновлен успешно');
+        res.redirect('/admin/callbacks?success=Статус обновлен');
     } catch (error) {
         console.error('Ошибка обновления статуса:', error);
-        res.status(500).send('Ошибка сервера');
+        res.redirect('/admin/callbacks?error=Ошибка при обновлении статуса');
+    }
+};
+
+// ========== УДАЛЕНИЕ ЗАЯВКИ НА ЗВОНОК ==========
+exports.deleteCallback = async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        // Проверяем, существует ли заявка
+        const [callbacks] = await db.query('SELECT * FROM callbacks WHERE id = ?', [id]);
+        if (callbacks.length === 0) {
+            return res.redirect('/admin/callbacks?error=Заявка не найдена');
+        }
+        
+        await db.query('DELETE FROM callbacks WHERE id = ?', [id]);
+        res.redirect('/admin/callbacks?success=Заявка удалена');
+    } catch (error) {
+        console.error('Ошибка удаления заявки:', error);
+        res.redirect('/admin/callbacks?error=Ошибка при удалении');
     }
 };
 
