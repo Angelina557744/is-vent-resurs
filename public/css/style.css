@@ -25,7 +25,6 @@ body {
     padding: 0 20px;
 }
 
-/* ========== HEADER ========== */
 .main-header {
     position: fixed;
     top: 0;
@@ -124,7 +123,6 @@ body {
     background: var(--dark-blue);
 }
 
-/* ========== FOOTER ========== */
 .main-footer {
     background: var(--black);
     color: var(--white);
@@ -164,7 +162,6 @@ body {
     color: var(--text-gray);
 }
 
-/* ========== ГЛОБАЛЬНЫЕ КАРТОЧКИ ========== */
 .test-card {
     background: var(--white);
     border-left: 5px solid var(--primary-blue);
@@ -199,7 +196,6 @@ body {
     padding-top: 10px;
 }
 
-/* ========== РЕГИСТРАЦИЯ И ВХОД ========== */
 .auth-card {
     background: var(--white);
     padding: 40px;
@@ -238,7 +234,6 @@ body {
     border-color: var(--primary-blue);
 }
 
-/* ========== СТРАНИЦА УСЛУГ ========== */
 .info-content span {
     display: block;
     font-size: 1.4rem;

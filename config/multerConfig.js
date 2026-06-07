@@ -2,7 +2,6 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 
-// Папка для фото проектов
 const projectPhotosDir = path.join(__dirname, '..', 'public', 'uploads', 'projects');
 if (!fs.existsSync(projectPhotosDir)) {
     fs.mkdirSync(projectPhotosDir, { recursive: true });
@@ -20,7 +19,6 @@ const projectPhotoStorage = multer.diskStorage({
 
 const uploadProjectPhoto = multer({ storage: projectPhotoStorage });
 
-// Папка для документов проектов
 const projectDocsDir = path.join(__dirname, '..', 'public', 'uploads', 'projects', 'docs');
 if (!fs.existsSync(projectDocsDir)) {
     fs.mkdirSync(projectDocsDir, { recursive: true });

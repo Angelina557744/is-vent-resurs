@@ -7,7 +7,6 @@ const axios = require('axios');
 const multer = require('multer');
 const fs = require('fs');
 
-// Подключение всех роутов
 const homeRoutes = require('./routes/homeRoutes');
 const authRoutes = require('./routes/authRoutes');
 const serviceRoutes = require('./routes/serviceRoutes');
@@ -20,7 +19,6 @@ dotenv.config();
 const app = express();
 const db = require('./config/db');
 
-// Проверка подключения к БД
 async function testConnection() {
     try {
         await db.query('SELECT 1');
@@ -33,7 +31,6 @@ testConnection();
 
 const PORT = process.env.PORT || 3000;
 
-// Настройка multer для загрузки файлов (общая)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = path.join(__dirname, 'public', 'img');
@@ -61,7 +58,6 @@ const upload = multer({
     }
 });
 
-// Настройки шаблонизатора
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -76,10 +72,8 @@ app.use(session({
     cookie: { maxAge: 1000 * 60 * 60 * 24 }
 }));
 
-// Отключаем проверку SSL для GigaChat (временно)
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-// Функция для получения токена GigaChat
 async function getGigaChatToken() {
     try {
         const response = await axios.post(
@@ -102,9 +96,6 @@ async function getGigaChatToken() {
     }
 }
 
-// --- MIDDLEWARES ---
-
-// 1. Настройки сайта во все шаблоны
 app.use(async (req, res, next) => {
     try {
         const [rows] = await db.query('SELECT setting_key, setting_value FROM site_settings');
@@ -121,13 +112,11 @@ app.use(async (req, res, next) => {
     }
 });
 
-// 2. Пользователь во все шаблоны
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
 });
 
-// 3. Роли пользователя во все шаблоны (для админки)
 app.use((req, res, next) => {
     if (req.session.user) {
         res.locals.isAdmin = req.session.user.role === 'admin';
@@ -139,7 +128,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// ========== ПОДКЛЮЧЕНИЕ ВСЕХ РОУТОВ ==========
 app.use('/', homeRoutes);
 app.use('/', authRoutes);
 app.use('/', serviceRoutes);
@@ -147,7 +135,9 @@ app.use('/', profileRoutes);
 app.use('/', adminRoutes);
 app.use('/', apiRoutes);
 
-// ========== ЗАПУСК СЕРВЕРА ==========
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
+
+
+

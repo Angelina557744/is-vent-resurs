@@ -3,14 +3,11 @@ const fs = require('fs');
 const path = require('path');
 const bcrypt = require('bcryptjs');
 
-// ========== ГЛАВНАЯ АДМИН-ПАНЕЛИ ==========
-// ========== ГЛАВНАЯ АДМИН-ПАНЕЛИ (адаптирована под роль) ==========
 exports.getDashboard = async (req, res) => {
     try {
         const userRole = req.session.user.role;
         const isAdminUser = userRole === 'admin';
 
-        // Базовые статистики (доступны всем)
         const [cRes] = await db.query('SELECT COUNT(*) as count FROM callbacks');
         const [mRes] = await db.query('SELECT COUNT(*) as count FROM contact_messages');
         const [upRes] = await db.query('SELECT COUNT(*) as count FROM user_projects');
@@ -47,28 +44,25 @@ exports.getDashboard = async (req, res) => {
     }
 };
 
-// ========== ЗАЯВКИ НА ЗВОНОК ==========
-// ========== ЗАЯВКИ НА ЗВОНОК ==========
 exports.getCallbacks = async (req, res) => {
     try {
         const [callbacks] = await db.query('SELECT * FROM callbacks ORDER BY created_at DESC');
         res.render('admin/callbacks', { 
             title: 'Заявки на звонок | Админ-панель',
             callbacks: callbacks || [],
-            success: req.query.success || null,   // ← ДОБАВИТЬ
-            error: req.query.error || null        // ← ДОБАВИТЬ
+            success: req.query.success || null,   
+            error: req.query.error || null        
         });
     } catch (error) {
         res.status(500).send('Ошибка загрузки заявок');
     }
 };
 
-// ========== ОБНОВЛЕНИЕ СТАТУСА ЗАЯВКИ ==========
 exports.updateCallbackStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     
-    console.log('Обновление статуса:', { id, status }); // Для отладки
+    console.log('Обновление статуса:', { id, status }); 
     
     try {
         await db.query('UPDATE callbacks SET status = ? WHERE id = ?', [status, id]);
@@ -80,12 +74,10 @@ exports.updateCallbackStatus = async (req, res) => {
     }
 };
 
-// ========== УДАЛЕНИЕ ЗАЯВКИ НА ЗВОНОК ==========
 exports.deleteCallback = async (req, res) => {
     const { id } = req.params;
     
     try {
-        // Проверяем, существует ли заявка
         const [callbacks] = await db.query('SELECT * FROM callbacks WHERE id = ?', [id]);
         if (callbacks.length === 0) {
             return res.redirect('/admin/callbacks?error=Заявка не найдена');
@@ -99,7 +91,6 @@ exports.deleteCallback = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ УСЛУГАМИ ==========
 exports.getServices = async (req, res) => {
     try {
         const [services] = await db.query('SELECT * FROM services');
@@ -129,7 +120,6 @@ exports.deleteService = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ ГЛАВНОЙ СТРАНИЦЕЙ ==========
 exports.getHomeEdit = async (req, res) => {
     try {
         const [texts] = await db.query('SELECT * FROM site_settings WHERE category IN ("hero", "about", "geo")');
@@ -142,7 +132,6 @@ exports.getHomeEdit = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ ПРОЕКТАМИ (ПОРТФОЛИО) ==========
 exports.getProjectsEdit = async (req, res) => {
     try {
         const [projects] = await db.query('SELECT * FROM projects ORDER BY year DESC');
@@ -173,7 +162,6 @@ exports.deleteProject = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ КОНТАКТАМИ ==========
 exports.getContactsEdit = async (req, res) => {
     try {
         const [texts] = await db.query('SELECT * FROM site_settings WHERE category = "contacts"');
@@ -195,7 +183,6 @@ exports.updateContacts = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ ТЕКСТАМИ (КОНТЕНТ) ==========
 exports.getContentEdit = async (req, res) => {
     const [settings] = await db.query('SELECT * FROM site_settings');
     res.render('admin/content', { title: 'Управление текстами', settings });
@@ -213,7 +200,6 @@ exports.updateContent = async (req, res) => {
     }
 };
 
-// ========== СООБЩЕНИЯ ПОЛЬЗОВАТЕЛЕЙ ==========
 exports.getMessages = async (req, res) => {
     try {
         const [messages] = await db.query('SELECT * FROM contact_messages ORDER BY created_at DESC');
@@ -251,7 +237,6 @@ exports.answerMessage = async (req, res) => {
     }
 };
 
-// ========== СЕРТИФИКАТЫ ==========
 exports.getCertificates = async (req, res) => {
     try {
         const [certificates] = await db.query('SELECT * FROM certificates ORDER BY order_index ASC');
@@ -267,7 +252,6 @@ exports.getCertificates = async (req, res) => {
     }
 };
 
-// ========== ПОЛЬЗОВАТЕЛИ ==========
 exports.getUsers = async (req, res) => {
     try {
         const { search, role, sort, order } = req.query;
@@ -403,9 +387,6 @@ exports.deleteUser = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ ПРОЕКТАМИ КЛИЕНТОВ (USER-PROJECTS) ==========
-
-// Список всех проектов клиентов
 exports.getUserProjects = async (req, res) => {
     try {
         const [projects] = await db.query(`
@@ -436,7 +417,6 @@ exports.getUserProjects = async (req, res) => {
     }
 };
 
-// Страница создания проекта (выбор пользователя)
 exports.getCreateUserProject = async (req, res) => {
     try {
         const [users] = await db.query('SELECT id, full_name, email FROM users ORDER BY full_name');
@@ -454,7 +434,6 @@ exports.getCreateUserProject = async (req, res) => {
     }
 };
 
-// Создание проекта
 exports.createUserProject = async (req, res) => {
     const { user_id, service_id, title, address, status } = req.body;
 
@@ -475,7 +454,6 @@ exports.createUserProject = async (req, res) => {
     }
 };
 
-// Детальная страница проекта
 exports.getUserProjectDetail = async (req, res) => {
     const projectId = req.params.id;
 
@@ -538,7 +516,6 @@ exports.getUserProjectDetail = async (req, res) => {
     }
 };
 
-// Обновление статуса проекта
 exports.updateUserProjectStatus = async (req, res) => {
     const projectId = req.params.id;
     const { status } = req.body;
@@ -555,7 +532,6 @@ exports.updateUserProjectStatus = async (req, res) => {
     }
 };
 
-// Обновление названия и адреса проекта
 exports.updateUserProject = async (req, res) => {
     const projectId = req.params.id;
     const { title, address, service_id } = req.body;
@@ -572,7 +548,6 @@ exports.updateUserProject = async (req, res) => {
     }
 };
 
-// Добавление сообщения от админа в проект
 exports.addUserProjectMessage = async (req, res) => {
     const projectId = req.params.id;
     const { message } = req.body;
@@ -594,7 +569,6 @@ exports.addUserProjectMessage = async (req, res) => {
     }
 };
 
-// Добавление фото в проект
 exports.addUserProjectPhoto = async (req, res) => {
     const projectId = req.params.id;
 
@@ -614,7 +588,6 @@ exports.addUserProjectPhoto = async (req, res) => {
     }
 };
 
-// Удаление фото из проекта
 exports.deleteUserProjectPhoto = async (req, res) => {
     const photoId = req.params.photoId;
 
@@ -634,7 +607,6 @@ exports.deleteUserProjectPhoto = async (req, res) => {
     }
 };
 
-// Добавление документа в проект
 exports.addUserProjectDocument = async (req, res) => {
     const projectId = req.params.id;
     const { title } = req.body;
@@ -655,7 +627,6 @@ exports.addUserProjectDocument = async (req, res) => {
     }
 };
 
-// Удаление документа из проекта
 exports.deleteUserProjectDocument = async (req, res) => {
     const docId = req.params.docId;
 
@@ -675,7 +646,6 @@ exports.deleteUserProjectDocument = async (req, res) => {
     }
 };
 
-// Удаление проекта
 exports.deleteUserProject = async (req, res) => {
     const projectId = req.params.id;
 
@@ -704,9 +674,6 @@ exports.deleteUserProject = async (req, res) => {
     }
 };
 
-// ========== УПРАВЛЕНИЕ ЗАЯВКАМИ НА УСЛУГИ ==========
-
-// Список заявок на услуги
 exports.getServiceOrders = async (req, res) => {
     try {
         const [orders] = await db.query(`
@@ -728,7 +695,6 @@ exports.getServiceOrders = async (req, res) => {
     }
 };
 
-// Одобрение заявки и создание проекта
 exports.approveServiceOrder = async (req, res) => {
     const orderId = req.params.id;
 
@@ -791,7 +757,6 @@ exports.approveServiceOrder = async (req, res) => {
     }
 };
 
-// Отклонение заявки
 exports.rejectServiceOrder = async (req, res) => {
     const orderId = req.params.id;
 
@@ -804,7 +769,6 @@ exports.rejectServiceOrder = async (req, res) => {
     }
 };
 
-// Удаление заявки
 exports.deleteServiceOrder = async (req, res) => {
     const orderId = req.params.id;
 
@@ -817,9 +781,6 @@ exports.deleteServiceOrder = async (req, res) => {
     }
 };
 
-// ========== ДЕТАЛЬНЫЕ ПРОЕКТЫ (ПОРТФОЛИО, АДМИН) ==========
-
-// Страница управления детальным проектом
 exports.getProjectDetailEdit = async (req, res) => {
     const projectId = req.params.id;
 
@@ -864,7 +825,6 @@ exports.getProjectDetailEdit = async (req, res) => {
     }
 };
 
-// Сохранение детального описания проекта
 exports.saveProjectDetail = async (req, res) => {
     const projectId = req.params.id;
     const { description, year, title } = req.body;
@@ -894,7 +854,6 @@ exports.saveProjectDetail = async (req, res) => {
     }
 };
 
-// Добавление события в таймлайн
 exports.addTimelineEvent = async (req, res) => {
     const { project_detail_id, month_date, title, content, display_order } = req.body;
 
@@ -912,7 +871,6 @@ exports.addTimelineEvent = async (req, res) => {
     }
 };
 
-// Удаление события из таймлайна
 exports.deleteTimelineEvent = async (req, res) => {
     const timelineId = req.params.id;
 
@@ -929,7 +887,6 @@ exports.deleteTimelineEvent = async (req, res) => {
     }
 };
 
-// Добавление фото в детальный проект
 exports.addProjectDetailPhoto = async (req, res) => {
     const { project_detail_id, title, description, display_order } = req.body;
 
@@ -951,7 +908,6 @@ exports.addProjectDetailPhoto = async (req, res) => {
     }
 };
 
-// Удаление фото из детального проекта
 exports.deleteProjectDetailPhoto = async (req, res) => {
     const photoId = req.params.id;
 
@@ -976,7 +932,6 @@ exports.deleteProjectDetailPhoto = async (req, res) => {
     }
 };
 
-// ========== СОЗДАНИЕ НОВОГО ПОЛЬЗОВАТЕЛЯ (для менеджера) ==========
 exports.createUser = async (req, res) => {
     const { username, full_name, email, phone, password, role } = req.body;
 
@@ -985,7 +940,6 @@ exports.createUser = async (req, res) => {
     }
 
     try {
-        // Проверяем, не существует ли пользователь
         const [existing] = await db.query(
             'SELECT id FROM users WHERE username = ? OR email = ?',
             [username, email]
@@ -997,12 +951,11 @@ exports.createUser = async (req, res) => {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Менеджер может создавать только пользователей с ролью 'user' или 'manager'
         let newRole = 'user';
         if (req.session.user.role === 'admin') {
             newRole = role || 'user';
         } else if (req.session.user.role === 'manager') {
-            newRole = 'user'; // Менеджер не может создавать других менеджеров
+            newRole = 'user';
         }
 
         await db.query(
@@ -1017,7 +970,6 @@ exports.createUser = async (req, res) => {
     }
 };
 
-// ========== ИСТОРИЯ ЧАТОВ ==========
 exports.getChatHistory = async (req, res) => {
     try {
         const [messages] = await db.query('SELECT * FROM chat_messages ORDER BY created_at DESC LIMIT 100');
@@ -1031,9 +983,6 @@ exports.getChatHistory = async (req, res) => {
     }
 };
 
-// ========== ВСПОМОГАТЕЛЬНЫЕ МЕТОДЫ ДЛЯ УСЛУГ (которые отсутствуют) ==========
-
-// Страница редактирования услуги
 exports.getServiceEdit = async (req, res) => {
     try {
         const [services] = await db.query('SELECT * FROM services WHERE id = ?', [req.params.id]);
@@ -1061,7 +1010,6 @@ exports.getServiceEdit = async (req, res) => {
     }
 };
 
-// Обновление услуги с загрузкой фото
 exports.updateService = async (req, res) => {
     const { title, description, full_description, price, seo_title, seo_description } = req.body;
     const serviceId = req.params.id;
@@ -1113,9 +1061,6 @@ exports.updateService = async (req, res) => {
     }
 };
 
-// ========== МЕТОДЫ ДЛЯ СЕРТИФИКАТОВ (которые отсутствуют) ==========
-
-// Добавление сертификата
 exports.addCertificate = async (req, res) => {
     const { title, is_active } = req.body;
 
@@ -1135,7 +1080,6 @@ exports.addCertificate = async (req, res) => {
     }
 };
 
-// Обновление сертификата
 exports.updateCertificate = async (req, res) => {
     const { id } = req.params;
     const { title, is_active, existing_image } = req.body;
@@ -1164,7 +1108,6 @@ exports.updateCertificate = async (req, res) => {
     }
 };
 
-// Удаление сертификата
 exports.deleteCertificate = async (req, res) => {
     const { id } = req.params;
 
@@ -1184,7 +1127,6 @@ exports.deleteCertificate = async (req, res) => {
     }
 };
 
-// Сортировка сертификатов
 exports.reorderCertificates = async (req, res) => {
     const { order } = req.body;
 

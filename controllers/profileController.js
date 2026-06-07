@@ -1,6 +1,5 @@
 const db = require('../config/db');
 
-// ========== ЛИЧНЫЙ КАБИНЕТ ==========
 exports.getProfile = async (req, res) => {
     try {
         const userId = req.session.user.id;
@@ -42,7 +41,6 @@ exports.getProfile = async (req, res) => {
     }
 };
 
-// ========== ДЕТАЛЬНЫЙ ПРОСМОТР ПРОЕКТА ==========
 exports.getProject = async (req, res) => {
     const projectId = req.params.id;
     const userId = req.session.user.id;
@@ -107,7 +105,6 @@ exports.getProject = async (req, res) => {
     }
 };
 
-// ========== ОТПРАВКА СООБЩЕНИЯ ПО ПРОЕКТУ ==========
 exports.sendProjectMessage = async (req, res) => {
     const projectId = req.params.id;
     const userId = req.session.user.id;
@@ -129,7 +126,6 @@ exports.sendProjectMessage = async (req, res) => {
     }
 };
 
-// ========== СТРАНИЦА КВИЗА ==========
 exports.getQuiz = (req, res) => {
     res.render('quiz', { title: 'Подбор системы вентиляции' });
 };

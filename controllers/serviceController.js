@@ -1,6 +1,5 @@
 const db = require('../config/db');
 
-// ========== СПИСОК ВСЕХ УСЛУГ ==========
 exports.getServices = async (req, res) => {
     try {
         const [services] = await db.query('SELECT * FROM services');
@@ -14,7 +13,6 @@ exports.getServices = async (req, res) => {
     }
 };
 
-// ========== ОТДЕЛЬНАЯ УСЛУГА ==========
 exports.getSingleService = async (req, res) => {
     try {
         const serviceId = req.params.id;
@@ -26,7 +24,6 @@ exports.getSingleService = async (req, res) => {
 
         const service = services[0];
 
-        // Парсим дополнительные фото
         let additionalImages = [];
         if (service.images_json && service.images_json !== 'null' && service.images_json !== '') {
             try {
@@ -41,7 +38,6 @@ exports.getSingleService = async (req, res) => {
             }
         }
 
-        // Получаем все услуги для выпадающего списка
         const [allServices] = await db.query('SELECT id, title FROM services ORDER BY title');
 
         res.render('service_detail', {

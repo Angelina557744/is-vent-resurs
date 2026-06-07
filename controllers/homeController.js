@@ -1,15 +1,10 @@
 const db = require('../config/db');
 
-// Очистка HTML-тегов из контента
 function cleanHtmlContent(content) {
     if (!content) return '';
-    // Удаляем все HTML-теги
     let cleaned = content.replace(/<[^>]*>/g, '');
-    // Заменяем множественные пробелы на один
     cleaned = cleaned.replace(/\s+/g, ' ');
-    // Заменяем переносы строк на <br> (чтобы сохранить форматирование)
     cleaned = cleaned.replace(/\n/g, '<br>');
-    // Убираем лишние пробелы в начале и конце
     cleaned = cleaned.trim();
     return cleaned;
 }
@@ -46,7 +41,6 @@ exports.getHomePage = async (req, res) => {
     }
 };
 
-// ========== СТРАНИЦА ПРОЕКТОВ (ПОРТФОЛИО) ==========
 exports.getProjects = async (req, res) => {
     try {
         const [projects] = await db.query('SELECT * FROM projects ORDER BY year DESC');
@@ -57,12 +51,10 @@ exports.getProjects = async (req, res) => {
     }
 };
 
-// ========== СТРАНИЦА КОНТАКТОВ ==========
 exports.getContacts = (req, res) => {
     res.render('contacts', { title: 'Контакты | ВентРесурс' });
 };
 
-// ========== ДЕТАЛЬНАЯ СТРАНИЦА ПРОЕКТА ==========
 exports.getProjectDetail = async (req, res) => {
     const { year, slug } = req.params;
 
@@ -94,7 +86,6 @@ exports.getProjectDetail = async (req, res) => {
                 [projectDetail.id]
             );
 
-            // ✅ ПРИМЕНЯЕМ ОЧИСТКУ К КАЖДОМУ ЭЛЕМЕНТУ ТАЙМЛАЙНА
             timeline = rawTimeline.map(item => ({
                 ...item,
                 content: cleanHtmlContent(item.content)

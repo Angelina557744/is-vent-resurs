@@ -2,7 +2,6 @@ ymaps.ready(function () {
     const mapEl = document.getElementById('map-data');
     if (!mapEl) return;
 
-    // Превращаем строку "51.81, 55.15" в массив [51.81, 55.15]
     const coords = mapEl.dataset.coords.split(',').map(Number);
     const address = mapEl.dataset.address;
 

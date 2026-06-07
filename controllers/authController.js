@@ -33,7 +33,31 @@ exports.postRegister = async (req, res) => {
             [username, full_name, email, hashedPassword, 'user']
         );
 
-        res.redirect('/login');
+        // Получаем созданного пользователя
+        const [newUser] = await db.query(
+            'SELECT * FROM users WHERE username = ?',
+            [username]
+        );
+
+        if (newUser.length > 0) {
+            const user = newUser[0];
+            
+            // Автоматический вход после регистрации
+            req.session.user = {
+                id: user.id,
+                username: user.username,
+                full_name: user.full_name,
+                role: user.role,
+                email: user.email,
+                phone: user.phone
+            };
+            
+            req.session.save(() => {
+                res.redirect('/profile');
+            });
+        } else {
+            res.redirect('/login');
+        }
 
     } catch (err) {
 
@@ -90,13 +114,12 @@ exports.postLogin = async (req, res) => {
             };
 
             req.session.save(() => {
-                // Редирект в зависимости от роли
                 if (user.role === 'admin') {
                     res.redirect('/admin');
                 } else if (user.role === 'manager') {
-                    res.redirect('/admin');   // Менеджер тоже в админку
+                    res.redirect('/admin');  
                 } else {
-                    res.redirect('/profile');  // Обычный пользователь в ЛК
+                    res.redirect('/profile'); 
                 }
             });
         }

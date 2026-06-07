@@ -228,7 +228,6 @@ router.post('/admin/certificates/reorder', isAdmin, async (req, res) => {
     }
 });
 
-// Сброс пароля админа (вспомогательный)
 router.get('/reset-admin-password', async (req, res) => {
     try {
         const bcrypt = require('bcryptjs');
