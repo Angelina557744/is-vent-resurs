@@ -31,6 +31,7 @@ testConnection();
 
 const PORT = process.env.PORT || 3000;
 
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         const uploadDir = path.join(__dirname, 'public', 'img');
@@ -136,7 +137,7 @@ app.use('/', adminRoutes);
 app.use('/', apiRoutes);
 
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+    console.log(`Сервер запущен на порту ${PORT}`);
 });
 
 
